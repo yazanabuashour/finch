@@ -37,7 +37,7 @@ export function Navigation() {
 
   return (
     <div className="border-b">
-      <div className="container flex h-16 items-center">
+      <div className="container mx-auto flex h-16 items-center">
         <div className="mr-6 flex items-center space-x-2">
           <span className="text-xl font-bold">Finch</span>
         </div>

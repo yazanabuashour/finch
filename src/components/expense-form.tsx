@@ -134,7 +134,11 @@ export function ExpenseForm() {
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <span className="absolute top-2.5 left-3">$</span>
+                    {/* --- Corrected Code --- */}
+                    <span className="text-muted-foreground absolute inset-y-0 left-0 flex items-center pl-3">
+                      $
+                    </span>
+                    {/* -------------------- */}
                     <Input placeholder="0.00" className="pl-7" {...field} />
                   </div>
                 </FormControl>

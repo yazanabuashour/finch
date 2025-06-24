@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { ArrowDownIcon, ArrowUpIcon, DollarSign, Wallet } from "lucide-react";
 
 export function MonthSummary() {
-  // In a real app, this would come from your database
   const summaryData = {
     totalIncome: 4200.0,
     totalSpending: 2800.0,

@@ -1,4 +1,5 @@
 "use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -32,6 +33,7 @@ import {
 import { Textarea } from "~/components/ui/textarea";
 import { toast } from "sonner";
 import { cn } from "~/lib/utils";
+import type { Category } from "~/server/db/schema";
 
 const formSchema = z.object({
   description: z.string().min(2, {
@@ -56,20 +58,11 @@ const formSchema = z.object({
   }),
 });
 
-export function ExpenseForm() {
-  // In a real app, these would come from your database
-  const categories = [
-    { id: "1", name: "Food" },
-    { id: "2", name: "Transportation" },
-    { id: "3", name: "Housing" },
-    { id: "4", name: "Utilities" },
-    { id: "5", name: "Entertainment" },
-    { id: "6", name: "Healthcare" },
-    { id: "7", name: "Salary" },
-    { id: "8", name: "Freelance" },
-    { id: "9", name: "Investments" },
-  ];
+interface ExpenseFormProps {
+  categories: Category[];
+}
 
+export function ExpenseForm({ categories }: ExpenseFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -201,7 +194,10 @@ export function ExpenseForm() {
                 </FormControl>
                 <SelectContent>
                   {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
+                    <SelectItem
+                      key={category.id}
+                      value={category.id.toString()}
+                    >
                       {category.name}
                     </SelectItem>
                   ))}

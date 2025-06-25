@@ -32,7 +32,6 @@ export const categories = pgTable(
   {
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 100 }).notNull(),
-    // Each category belongs to a user
     userId: integer("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -52,7 +51,6 @@ export const transactions = pgTable("transactions", {
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   transactionDate: date("transaction_date").notNull(),
   type: transactionTypeEnum("type").notNull(),
-  // Each transaction belongs to a user
   userId: integer("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),

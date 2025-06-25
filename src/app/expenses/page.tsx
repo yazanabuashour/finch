@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
-import { ExpenseForm } from "~/components/expense-form";
+import { ExpenseForm } from "~/components/expense-form/expense-form";
 import {
   Card,
   CardContent,

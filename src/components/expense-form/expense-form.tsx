@@ -1,8 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 
@@ -34,37 +34,19 @@ import { Textarea } from "~/components/ui/textarea";
 import { toast } from "sonner";
 import { cn } from "~/lib/utils";
 import type { Category } from "~/server/db/schema";
-
-const formSchema = z.object({
-  description: z.string().min(2, {
-    message: "Description must be at least 2 characters.",
-  }),
-  amount: z
-    .string()
-    .refine(
-      (val) => !isNaN(Number.parseFloat(val)) && Number.parseFloat(val) > 0,
-      {
-        message: "Amount must be a positive number.",
-      },
-    ),
-  transactionDate: z.date({
-    required_error: "Please select a date.",
-  }),
-  type: z.enum(["expense", "income"], {
-    required_error: "Please select a transaction type.",
-  }),
-  categoryId: z.string({
-    required_error: "Please select a category.",
-  }),
-});
+import { submitFormAction } from "./action";
+import { validationSchema } from "./shared";
+import type z from "zod";
 
 interface ExpenseFormProps {
   categories: Category[];
 }
 
+type FormData = z.infer<typeof validationSchema>;
+
 export function ExpenseForm({ categories }: ExpenseFormProps) {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<FormData>({
+    resolver: zodResolver(validationSchema),
     defaultValues: {
       description: "",
       amount: "",
@@ -73,16 +55,32 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    toast.success("Transaction added", {
-      description: (
-        <pre className="mt-2 w-full rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(values, null, 2)}</code>
-        </pre>
-      ),
-    });
-    form.reset();
-  }
+  const onSubmit = async (data: FormData) => {
+    const result = await submitFormAction(data);
+
+    if (result.success) {
+      toast.success(result.message);
+      form.reset({
+        description: "",
+        amount: "",
+        transactionDate: new Date(),
+        type: "expense",
+        categoryId: "",
+      });
+    } else {
+      // Display a generic error or specific field errors
+      toast.error(result.message || "An error occurred.");
+      console.error("Form submission failed:", result.errors);
+    }
+  };
+
+  const transactionType = form.watch("type");
+
+  useEffect(() => {
+    if (transactionType === "income") {
+      form.setValue("categoryId", "", { shouldValidate: true });
+    }
+  }, [transactionType, form]);
 
   return (
     <Form {...form}>
@@ -127,11 +125,9 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    {/* --- Corrected Code --- */}
                     <span className="text-muted-foreground absolute inset-y-0 left-0 flex items-center pl-3">
                       $
                     </span>
-                    {/* -------------------- */}
                     <Input placeholder="0.00" className="pl-7" {...field} />
                   </div>
                 </FormControl>
@@ -186,7 +182,11 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={transactionType === "income"}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />

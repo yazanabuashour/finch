@@ -6,4 +6,4 @@
 [ ] Ability to see trends/breakdown for any past month
 [ ] Should description be notNull on transaction table?
 [ ] Ability to edit past transactions
-[ ] Categories dropdown in expense-form should be sorted
+[ ] Make sure any state is managed by url params

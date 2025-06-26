@@ -58,51 +58,12 @@ export const transactions = pgTable("transactions", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
-export const monthlySummaries = pgTable(
-  "monthly_summaries",
-  {
-    id: serial("id").primaryKey(),
-    monthStartDate: date("month_start_date").notNull(),
-    totalIncome: decimal("total_income", {
-      precision: 10,
-      scale: 2,
-    })
-      .notNull()
-      .default("0"),
-    totalSpending: decimal("total_spending", {
-      precision: 10,
-      scale: 2,
-    })
-      .notNull()
-      .default("0"),
-    netSavings: decimal("net_savings", {
-      precision: 10,
-      scale: 2,
-    })
-      .notNull()
-      .default("0"),
-    endOfMonthCash: decimal("end_of_month_cash", {
-      precision: 10,
-      scale: 2,
-    })
-      .notNull()
-      .default("0"),
-    userId: integer("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-  },
-  (table) => ({
-    userMonthUnique: unique("user_month_unique").on(
-      table.userId,
-      table.monthStartDate,
-    ),
-  }),
-);
+
 
 export const usersRelations = relations(users, ({ many }) => ({
   transactions: many(transactions),
   categories: many(categories),
-  monthlySummaries: many(monthlySummaries),
+  
 }));
 
 export const categoriesRelations = relations(categories, ({ one, many }) => ({
@@ -124,15 +85,7 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   }),
 }));
 
-export const monthlySummariesRelations = relations(
-  monthlySummaries,
-  ({ one }) => ({
-    user: one(users, {
-      fields: [monthlySummaries.userId],
-      references: [users.id],
-    }),
-  }),
-);
+
 
 export type User = InferSelectModel<typeof users>;
 export type NewUser = InferInsertModel<typeof users>;
@@ -143,5 +96,4 @@ export type NewCategory = InferInsertModel<typeof categories>;
 export type Transaction = InferSelectModel<typeof transactions>;
 export type NewTransaction = InferInsertModel<typeof transactions>;
 
-export type MonthlySummary = InferSelectModel<typeof monthlySummaries>;
-export type NewMonthlySummary = InferInsertModel<typeof monthlySummaries>;
+

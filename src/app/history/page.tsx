@@ -1,6 +1,10 @@
-"use client";
+// This is a Server Component (no "use client")
+import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { endOfMonth, parse, startOfMonth } from "date-fns";
+import { auth } from "@clerk/nextjs/server";
+import { db } from "~/server/db";
+import { categories, transactions, users } from "~/server/db/schema";
 
-import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,71 +12,147 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { TransactionList } from "~/components/transaction-list";
+import { MonthSelector } from "~/components/month-selector";
 
-export default function HistoryPage() {
-  const [selectedMonth, setSelectedMonth] = useState("june-2023");
+export type TransactionWithCategory = {
+  id: number;
+  description: string | null;
+  amount: string;
+  transactionDate: string;
+  type: "expense" | "income";
+  category: {
+    name: string;
+  } | null;
+};
 
-  // In a real app, these would be dynamically generated from your data
-  const months = [
-    { value: "june-2023", label: "June 2023" },
-    { value: "may-2023", label: "May 2023" },
-    { value: "april-2023", label: "April 2023" },
-    { value: "march-2023", label: "March 2023" },
-    { value: "february-2023", label: "February 2023" },
-    { value: "january-2023", label: "January 2023" },
-  ];
+export default async function HistoryPage({
+  searchParams,
+}: {
+  searchParams?: {
+    month?: string;
+  };
+}) {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) {
+    return <p className="text-center">Please sign in to view your history.</p>;
+  }
+  const user = await db.query.users.findFirst({
+    where: eq(users.clerkUserId, clerkUserId),
+    columns: { id: true },
+  });
+  if (!user) {
+    return <p className="text-center">User not found.</p>;
+  }
+
+  const monthsResult: { month: string }[] = await db.execute(sql`
+    SELECT DISTINCT TO_CHAR(${transactions.transactionDate}, 'YYYY-MM') as month
+    FROM ${transactions}
+    WHERE ${transactions.userId} = ${user.id}
+    ORDER BY month DESC
+  `);
+
+  const availableMonths = monthsResult
+    .map((row) => {
+      if (!row.month) return undefined; // Handle potential null/undefined from DB
+      const [year, month] = row.month.split("-");
+      if (!year || !month) {
+        console.error("month or year do not exist");
+        return null;
+      }
+      const date = new Date(parseInt(year), parseInt(month) - 1);
+      return {
+        value: row.month,
+        label: date.toLocaleString("en-US", {
+          month: "long",
+          year: "numeric",
+        }),
+      };
+    })
+    .filter(Boolean);
+
+  const selectedMonth = searchParams?.month ?? availableMonths[0]?.value;
+
+  let transactionsData: TransactionWithCategory[] = [];
+  if (selectedMonth) {
+    const parsedDate = parse(selectedMonth, "yyyy-MM", new Date());
+    const startDate = startOfMonth(parsedDate);
+    const endDate = endOfMonth(parsedDate);
+
+    transactionsData = await db
+      .select({
+        id: transactions.id,
+        description: transactions.description,
+        amount: transactions.amount,
+        transactionDate: transactions.transactionDate,
+        type: transactions.type,
+        category: { name: categories.name },
+      })
+      .from(transactions)
+      .leftJoin(categories, eq(transactions.categoryId, categories.id))
+      .where(
+        and(
+          eq(transactions.userId, user.id),
+          gte(
+            transactions.transactionDate,
+            startDate.toISOString().slice(0, 10),
+          ),
+          lte(transactions.transactionDate, endDate.toISOString().slice(0, 10)),
+        ),
+      )
+      .orderBy(sql`${transactions.transactionDate} DESC`);
+  }
+
+  // FIX 4: Also use nullish coalescing here.
+  const selectedMonthLabel =
+    availableMonths.find((m) => m.value === selectedMonth)?.label ??
+    "Transaction History";
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Transaction History</h1>
-        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select month" />
-          </SelectTrigger>
-          <SelectContent>
-            {months.map((month) => (
-              <SelectItem key={month.value} value={month.value}>
-                {month.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* The availableMonths prop is now correctly typed, resolving the error */}
+        <MonthSelector months={availableMonths} selectedMonth={selectedMonth} />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>June 2023</CardTitle>
+          <CardTitle>{selectedMonthLabel}</CardTitle>
           <CardDescription>
-            View your transactions for this month
+            View your transactions for this month.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="expenses">Expenses</TabsTrigger>
-              <TabsTrigger value="income">Income</TabsTrigger>
-            </TabsList>
-            <TabsContent value="all">
-              <TransactionList filter="all" />
-            </TabsContent>
-            <TabsContent value="expenses">
-              <TransactionList filter="expense" />
-            </TabsContent>
-            <TabsContent value="income">
-              <TransactionList filter="income" />
-            </TabsContent>
-          </Tabs>
+          {transactionsData.length > 0 ? (
+            <Tabs defaultValue="all" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="expenses">Expenses</TabsTrigger>
+                <TabsTrigger value="income">Income</TabsTrigger>
+              </TabsList>
+              <TabsContent value="all">
+                <TransactionList filter="all" transactions={transactionsData} />
+              </TabsContent>
+              <TabsContent value="expenses">
+                <TransactionList
+                  filter="expense"
+                  transactions={transactionsData}
+                />
+              </TabsContent>
+              <TabsContent value="income">
+                <TransactionList
+                  filter="income"
+                  transactions={transactionsData}
+                />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <div className="text-muted-foreground py-8 text-center">
+              No transactions found for this period.
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

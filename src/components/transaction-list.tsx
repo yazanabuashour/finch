@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Search } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
+import { Input } from "~/components/ui/input";
 import {
   Table,
   TableBody,
@@ -10,83 +12,19 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { Input } from "~/components/ui/input";
-import { Search } from "lucide-react";
+// Import the type from the page component where it's now defined
+import type { TransactionWithCategory } from "~/app/history/page";
 
 interface TransactionListProps {
   filter: "all" | "expense" | "income";
+  transactions: TransactionWithCategory[];
 }
 
-export function TransactionList({ filter }: TransactionListProps) {
+export function TransactionList({
+  filter,
+  transactions,
+}: TransactionListProps) {
   const [searchQuery, setSearchQuery] = useState("");
-
-  // In a real app, this would come from your database
-  const transactions = [
-    {
-      id: 1,
-      description: "Grocery Shopping",
-      amount: 85.2,
-      type: "expense",
-      category: "Food",
-      date: "2023-06-10",
-    },
-    {
-      id: 2,
-      description: "Salary",
-      amount: 2500.0,
-      type: "income",
-      category: "Salary",
-      date: "2023-06-05",
-    },
-    {
-      id: 3,
-      description: "Internet Bill",
-      amount: 65.0,
-      type: "expense",
-      category: "Utilities",
-      date: "2023-06-03",
-    },
-    {
-      id: 4,
-      description: "Freelance Work",
-      amount: 350.0,
-      type: "income",
-      category: "Freelance",
-      date: "2023-06-02",
-    },
-    {
-      id: 5,
-      description: "Restaurant",
-      amount: 42.5,
-      type: "expense",
-      category: "Dining",
-      date: "2023-06-01",
-    },
-    {
-      id: 6,
-      description: "Gas",
-      amount: 35.75,
-      type: "expense",
-      category: "Transportation",
-      date: "2023-06-08",
-    },
-    {
-      id: 7,
-      description: "Movie Tickets",
-      amount: 24.0,
-      type: "expense",
-      category: "Entertainment",
-      date: "2023-06-12",
-    },
-    {
-      id: 8,
-      description: "Dividend Payment",
-      amount: 120.5,
-      type: "income",
-      category: "Investments",
-      date: "2023-06-15",
-    },
-  ];
 
   const filteredTransactions = transactions
     .filter((transaction) => {
@@ -95,12 +33,15 @@ export function TransactionList({ filter }: TransactionListProps) {
     })
     .filter((transaction) => {
       if (!searchQuery) return true;
-      return (
+      const descriptionMatch =
         transaction.description
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()) ?? false;
+      const categoryMatch =
+        transaction.category?.name
           .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        transaction.category.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+          .includes(searchQuery.toLowerCase()) ?? false;
+      return descriptionMatch || categoryMatch;
     });
 
   return (
@@ -138,10 +79,12 @@ export function TransactionList({ filter }: TransactionListProps) {
             ) : (
               filteredTransactions.map((transaction) => (
                 <TableRow key={transaction.id}>
-                  <TableCell>{transaction.date}</TableCell>
+                  <TableCell>{transaction.transactionDate}</TableCell>
                   <TableCell>{transaction.description}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{transaction.category}</Badge>
+                    <Badge variant="outline">
+                      {transaction.category?.name ?? "Uncategorized"}
+                    </Badge>
                   </TableCell>
                   <TableCell
                     className={`text-right font-medium ${
@@ -151,7 +94,7 @@ export function TransactionList({ filter }: TransactionListProps) {
                     }`}
                   >
                     {transaction.type === "expense" ? "-" : "+"}$
-                    {transaction.amount.toFixed(2)}
+                    {parseFloat(transaction.amount).toFixed(2)}
                   </TableCell>
                 </TableRow>
               ))

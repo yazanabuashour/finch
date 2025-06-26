@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "~/components/ui/chart";
+import { formatCurrency } from "~/lib/utils";
 
 interface MonthlyTrendChartProps {
   data: {
@@ -21,13 +22,6 @@ interface MonthlyTrendChartProps {
 }
 
 export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
-  const formatCurrency = (value: number) => {
-    return `$${value.toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-  };
-
   return (
     <div className="h-[400px] w-full">
       <ResponsiveContainer width="100%" height="100%">

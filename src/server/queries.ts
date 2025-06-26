@@ -189,13 +189,21 @@ export const getMonthlyTrend = async (
 
   for (const t of userTransactions) {
     const date = t.transactionDate;
-    const monthKey = `${date.getFullYear()}-${String(
-      date.getMonth() + 1,
+    // Use UTC methods to avoid timezone issues
+    const monthKey = `${date.getUTCFullYear()}-${String(
+      date.getUTCMonth() + 1,
     ).padStart(2, "0")}`;
 
     if (!monthlyMap.has(monthKey)) {
+      // Create a UTC date for consistent month formatting
+      const utcDate = new Date(
+        Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1),
+      );
       monthlyMap.set(monthKey, {
-        month: date.toLocaleString("default", { month: "short" }),
+        month: utcDate.toLocaleString("default", {
+          month: "short",
+          timeZone: "UTC",
+        }),
         income: 0,
         expenses: 0,
       });

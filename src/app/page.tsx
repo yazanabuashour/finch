@@ -1,4 +1,3 @@
-// app/page.tsx
 import {
   Card,
   CardContent,
@@ -43,7 +42,6 @@ export default async function Dashboard() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {/* Pass the combined summaryData object */}
         <MonthSummary summary={summaryData} />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">

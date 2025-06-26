@@ -16,11 +16,26 @@ interface CategoryChartProps {
   }[];
 }
 
+const CATEGORY_COLORS = [
+  "#3b82f6", // blue
+  "#ef4444", // red
+  "#10b981", // emerald
+  "#f59e0b", // amber
+  "#8b5cf6", // violet
+  "#06b6d4", // cyan
+  "#84cc16", // lime
+  "#f97316", // orange
+  "#ec4899", // pink
+  "#6b7280", // gray
+  "#14b8a6", // teal
+  "#a855f7", // purple
+];
+
 export function CategoryChart({ data }: CategoryChartProps) {
-  const chartData = data.map((d) => ({
+  const chartData = data.map((d, index) => ({
     name: d.name,
     value: d.amount,
-    color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+    color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
   }));
 
   return (

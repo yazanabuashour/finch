@@ -2,5 +2,5 @@
 
 ## Todo
 
-[ ] Trends monthly trends hover is a white box, needs to be grayish
 [ ] Auto backup db
+[ ] Ability to see trends/breakdown for any past month

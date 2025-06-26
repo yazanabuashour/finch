@@ -21,6 +21,13 @@ interface MonthlyTrendChartProps {
 }
 
 export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
+  const formatCurrency = (value: number) => {
+    return `$${value.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  };
+
   return (
     <div className="h-[400px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -29,21 +36,26 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
           margin={{
             top: 10,
             right: 30,
-            left: 0,
+            left: 60,
             bottom: 0,
           }}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="month" />
-          <YAxis />
+          <YAxis tickFormatter={formatCurrency} />
           <Tooltip
             formatter={(value) => {
               if (typeof value === "number") {
-                return [`${value}`, undefined];
+                return [formatCurrency(value), undefined];
               }
               return [String(value), undefined];
             }}
-            contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0" }}
+            contentStyle={{
+              borderRadius: "8px",
+              border: "1px solid #e2e8f0",
+              backgroundColor: "#1f2937",
+              color: "#f9fafb",
+            }}
           />
           <Legend />
           <Area

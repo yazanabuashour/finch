@@ -1,4 +1,3 @@
-// This is a Server Component (no "use client")
 import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { endOfMonth, parse, startOfMonth } from "date-fns";
 import { auth } from "@clerk/nextjs/server";
@@ -27,13 +26,12 @@ export type TransactionWithCategory = {
   } | null;
 };
 
-export default async function HistoryPage({
-  searchParams,
-}: {
-  searchParams?: {
+export default async function HistoryPage(props: {
+  searchParams?: Promise<{
     month?: string;
-  };
+  }>;
 }) {
+  const searchParams = await props.searchParams;
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) {
     return <p className="text-center">Please sign in to view your history.</p>;
@@ -55,13 +53,9 @@ export default async function HistoryPage({
 
   const availableMonths = monthsResult
     .map((row) => {
-      if (!row.month) return undefined; // Handle potential null/undefined from DB
-      const [year, month] = row.month.split("-");
-      if (!year || !month) {
-        console.error("month or year do not exist");
-        return null;
-      }
-      const date = new Date(parseInt(year), parseInt(month) - 1);
+      if (!row.month) return null;
+      const [year, month] = row.month.split("-") as [string, string];
+      const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1);
       return {
         value: row.month,
         label: date.toLocaleString("en-US", {
@@ -70,7 +64,10 @@ export default async function HistoryPage({
         }),
       };
     })
-    .filter(Boolean);
+    .filter(
+      (m): m is { value: string; label: string } =>
+        m !== null && m !== undefined,
+    );
 
   const selectedMonth = searchParams?.month ?? availableMonths[0]?.value;
 
@@ -104,7 +101,6 @@ export default async function HistoryPage({
       .orderBy(sql`${transactions.transactionDate} DESC`);
   }
 
-  // FIX 4: Also use nullish coalescing here.
   const selectedMonthLabel =
     availableMonths.find((m) => m.value === selectedMonth)?.label ??
     "Transaction History";
@@ -113,7 +109,6 @@ export default async function HistoryPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Transaction History</h1>
-        {/* The availableMonths prop is now correctly typed, resolving the error */}
         <MonthSelector months={availableMonths} selectedMonth={selectedMonth} />
       </div>
 

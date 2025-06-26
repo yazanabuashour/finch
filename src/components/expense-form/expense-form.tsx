@@ -78,9 +78,18 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
 
   useEffect(() => {
     if (transactionType === "income") {
-      form.setValue("categoryId", "", { shouldValidate: true });
+      const incomeCategory = categories.find(
+        (category) => category.name === "Income",
+      );
+      if (incomeCategory) {
+        form.setValue("categoryId", incomeCategory.id.toString(), {
+          shouldValidate: true,
+        });
+      } else {
+        toast.error("Income category not found. Please create it.");
+      }
     }
-  }, [transactionType, form]);
+  }, [transactionType, form, categories]);
 
   return (
     <Form {...form}>

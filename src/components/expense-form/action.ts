@@ -36,6 +36,10 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
     const { amount, categoryId, transactionDate, ...rest } = parseResult.data;
     const categoryIdAsInt = categoryId ? parseInt(categoryId, 10) : null;
 
+    if (!categoryIdAsInt) {
+      return { success: false, message: "Category ID is null." };
+    }
+
     await db.insert(transactions).values({
       ...rest,
       amount: amount,

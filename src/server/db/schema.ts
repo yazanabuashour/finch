@@ -54,9 +54,7 @@ export const transactions = pgTable("transactions", {
   userId: integer("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  categoryId: integer("category_id").references(() => categories.id, {
-    onDelete: "set null",
-  }),
+  categoryId: integer("category_id").notNull().references(() => categories.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 

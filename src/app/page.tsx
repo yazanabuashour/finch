@@ -1,3 +1,4 @@
+// app/page.tsx
 import {
   Card,
   CardContent,
@@ -12,6 +13,7 @@ import {
   getTransactions,
   getMonthSummary,
   getMonthlyTrend,
+  getTotalCash,
 } from "~/server/queries";
 import { auth } from "@clerk/nextjs/server";
 
@@ -21,18 +23,28 @@ export default async function Dashboard() {
     return <div>User not found</div>;
   }
 
-  const transactions = await getTransactions(userId);
-  const monthSummary = await getMonthSummary(
-    userId,
-    new Date().getFullYear(),
-    new Date().getMonth() + 1,
-  );
-  const monthlyTrend = await getMonthlyTrend(userId);
+  const [transactions, monthSummary, monthlyTrend, totalCash] =
+    await Promise.all([
+      getTransactions(userId),
+      getMonthSummary(
+        userId,
+        new Date().getFullYear(),
+        new Date().getMonth() + 1,
+      ),
+      getMonthlyTrend(userId),
+      getTotalCash(userId),
+    ]);
+
+  const summaryData = {
+    ...monthSummary,
+    totalCash: totalCash,
+  };
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MonthSummary summary={monthSummary} />
+        {/* Pass the combined summaryData object */}
+        <MonthSummary summary={summaryData} />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">

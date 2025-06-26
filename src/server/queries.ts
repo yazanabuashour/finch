@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "./db";
 import { users, transactions } from "./db/schema";
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
 
 export const getTransactions = async (
   clerkUserId: string,
@@ -74,6 +74,37 @@ export const getMonthSummary = async (
     totalSpending: summary.totalSpending,
     netSavings: summary.totalIncome - summary.totalSpending,
   };
+};
+
+// New function to calculate total cash
+export const getTotalCash = async (clerkUserId: string) => {
+  const user = await db.query.users.findFirst({
+    where: eq(users.clerkUserId, clerkUserId),
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const result = await db
+    .select({
+      totalIncome:
+        sql<number>`COALESCE(SUM(CASE WHEN ${transactions.type} = 'income' THEN ${transactions.amount} ELSE 0 END), 0)`.mapWith(
+          Number,
+        ),
+      totalExpenses:
+        sql<number>`COALESCE(SUM(CASE WHEN ${transactions.type} = 'expense' THEN ${transactions.amount} ELSE 0 END), 0)`.mapWith(
+          Number,
+        ),
+    })
+    .from(transactions)
+    .where(eq(transactions.userId, user.id));
+
+  const { totalIncome, totalExpenses } = result[0] ?? {
+    totalIncome: 0,
+    totalExpenses: 0,
+  };
+  return totalIncome - totalExpenses;
 };
 
 export const getCategoryBreakdown = async (

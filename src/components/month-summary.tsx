@@ -6,6 +6,7 @@ interface MonthSummaryProps {
     totalIncome: number;
     totalSpending: number;
     netSavings: number;
+    totalCash: number;
   };
 }
 
@@ -47,11 +48,14 @@ export function MonthSummary({ summary }: MonthSummaryProps) {
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">End of Month</CardTitle>
+          <CardTitle className="text-sm font-medium">Total Cash</CardTitle>
           <DollarSign className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">$0.00</div>
+          {/* Access totalCash from the summary object */}
+          <div className="text-2xl font-bold">
+            ${summary.totalCash.toFixed(2)}
+          </div>
         </CardContent>
       </Card>
     </>

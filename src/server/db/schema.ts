@@ -49,7 +49,7 @@ export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   description: text("description"),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  transactionDate: date("transaction_date").notNull(),
+  transactionDate: date("transaction_date", { mode: "date" }).notNull(),
   type: transactionTypeEnum("type").notNull(),
   userId: integer("user_id")
     .notNull()

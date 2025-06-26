@@ -9,8 +9,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { CategoryChart } from "~/components/category-chart";
 import { MonthlyTrendChart } from "~/components/monthly-trend-chart";
 import { CategoryBreakdown } from "~/components/category-breakdown";
+import { getCategoryBreakdown, getMonthlyTrend } from "~/server/queries";
+import { auth } from "@clerk/nextjs/server";
 
-export default function TrendsPage() {
+export default async function TrendsPage() {
+  const { userId } = await auth();
+  if (!userId) {
+    return <div>User not found</div>;
+  }
+  const categoryBreakdown = await getCategoryBreakdown(
+    userId,
+    new Date().getFullYear(),
+    new Date().getMonth() + 1,
+  );
+  const monthlyTrend = await getMonthlyTrend(userId);
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Spending Trends</h1>
@@ -30,7 +43,7 @@ export default function TrendsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <CategoryChart />
+                <CategoryChart data={categoryBreakdown} />
               </CardContent>
             </Card>
             <Card>
@@ -41,7 +54,7 @@ export default function TrendsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <CategoryBreakdown />
+                <CategoryBreakdown data={categoryBreakdown} />
               </CardContent>
             </Card>
           </div>
@@ -55,7 +68,7 @@ export default function TrendsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <MonthlyTrendChart />
+              <MonthlyTrendChart data={monthlyTrend} />
             </CardContent>
           </Card>
         </TabsContent>

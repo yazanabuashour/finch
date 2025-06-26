@@ -10,41 +10,15 @@ import {
   Tooltip,
 } from "~/components/ui/chart";
 
-export function Overview() {
-  // In a real app, this would come from your database
-  const data = [
-    {
-      name: "Jan",
-      income: 4000,
-      expenses: 2400,
-    },
-    {
-      name: "Feb",
-      income: 3000,
-      expenses: 1398,
-    },
-    {
-      name: "Mar",
-      income: 2000,
-      expenses: 3800,
-    },
-    {
-      name: "Apr",
-      income: 2780,
-      expenses: 3908,
-    },
-    {
-      name: "May",
-      income: 1890,
-      expenses: 4800,
-    },
-    {
-      name: "Jun",
-      income: 2390,
-      expenses: 3800,
-    },
-  ];
+interface OverviewProps {
+  data: {
+    month: string;
+    income: number;
+    expenses: number;
+  }[];
+}
 
+export function Overview({ data }: OverviewProps) {
   return (
     <ResponsiveContainer width="100%" height={350}>
       <BarChart data={data}>

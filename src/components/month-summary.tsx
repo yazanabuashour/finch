@@ -1,16 +1,15 @@
-"use client";
-
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { ArrowDownIcon, ArrowUpIcon, DollarSign, Wallet } from "lucide-react";
 
-export function MonthSummary() {
-  const summaryData = {
-    totalIncome: 4200.0,
-    totalSpending: 2800.0,
-    netSavings: 1400.0,
-    endOfMonthCash: 5600.0,
+interface MonthSummaryProps {
+  summary: {
+    totalIncome: number;
+    totalSpending: number;
+    netSavings: number;
   };
+}
 
+export function MonthSummary({ summary }: MonthSummaryProps) {
   return (
     <>
       <Card>
@@ -20,7 +19,7 @@ export function MonthSummary() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            ${summaryData.totalIncome.toFixed(2)}
+            ${summary.totalIncome.toFixed(2)}
           </div>
         </CardContent>
       </Card>
@@ -31,7 +30,7 @@ export function MonthSummary() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            ${summaryData.totalSpending.toFixed(2)}
+            ${summary.totalSpending.toFixed(2)}
           </div>
         </CardContent>
       </Card>
@@ -42,7 +41,7 @@ export function MonthSummary() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            ${summaryData.netSavings.toFixed(2)}
+            ${summary.netSavings.toFixed(2)}
           </div>
         </CardContent>
       </Card>
@@ -52,9 +51,7 @@ export function MonthSummary() {
           <DollarSign className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            ${summaryData.endOfMonthCash.toFixed(2)}
-          </div>
+          <div className="text-2xl font-bold">$0.00</div>
         </CardContent>
       </Card>
     </>

@@ -11,47 +11,16 @@ import {
   YAxis,
 } from "~/components/ui/chart";
 
-export function MonthlyTrendChart() {
-  // In a real app, this would come from your database
-  const data = [
-    {
-      month: "Jan",
-      income: 4000,
-      expenses: 2400,
-      savings: 1600,
-    },
-    {
-      month: "Feb",
-      income: 3000,
-      expenses: 1398,
-      savings: 1602,
-    },
-    {
-      month: "Mar",
-      income: 2000,
-      expenses: 3800,
-      savings: -1800,
-    },
-    {
-      month: "Apr",
-      income: 2780,
-      expenses: 3908,
-      savings: -1128,
-    },
-    {
-      month: "May",
-      income: 1890,
-      expenses: 4800,
-      savings: -2910,
-    },
-    {
-      month: "Jun",
-      income: 2390,
-      expenses: 3800,
-      savings: -1410,
-    },
-  ];
+interface MonthlyTrendChartProps {
+  data: {
+    month: string;
+    income: number;
+    expenses: number;
+    savings: number;
+  }[];
+}
 
+export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
   return (
     <div className="h-[400px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -70,7 +39,7 @@ export function MonthlyTrendChart() {
           <Tooltip
             formatter={(value) => {
               if (typeof value === "number") {
-                return [`$${value}`, undefined];
+                return [`${value}`, undefined];
               }
               return [String(value), undefined];
             }}

@@ -8,24 +8,27 @@ import {
   Tooltip,
 } from "~/components/ui/chart";
 
-export function CategoryChart() {
-  // In a real app, this would come from your database
-  const data = [
-    { name: "Food", value: 850, color: "#10b981" },
-    { name: "Housing", value: 1200, color: "#3b82f6" },
-    { name: "Transportation", value: 350, color: "#6366f1" },
-    { name: "Utilities", value: 200, color: "#8b5cf6" },
-    { name: "Entertainment", value: 150, color: "#ec4899" },
-    { name: "Healthcare", value: 120, color: "#f43f5e" },
-    { name: "Other", value: 80, color: "#64748b" },
-  ];
+interface CategoryChartProps {
+  data: {
+    name: string;
+    amount: number;
+    total: number;
+  }[];
+}
+
+export function CategoryChart({ data }: CategoryChartProps) {
+  const chartData = data.map((d) => ({
+    name: d.name,
+    value: d.amount,
+    color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+  }));
 
   return (
     <div className="h-[350px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
-            data={data}
+            data={chartData}
             cx="50%"
             cy="50%"
             innerRadius={70}
@@ -37,14 +40,14 @@ export function CategoryChart() {
             }
             labelLine={false}
           >
-            {data.map((entry, index) => (
+            {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
           <Tooltip
             formatter={(value) => {
               if (typeof value === "number") {
-                return [`$${value.toFixed(2)}`, "Amount"];
+                return [`${value.toFixed(2)}`, "Amount"];
               }
               return [value, "Amount"];
             }}

@@ -7,7 +7,6 @@ import { db } from "~/server/db";
 import { users, transactions } from "~/server/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { format } from "date-fns";
 
 export async function submitFormAction(data: z.infer<typeof validationSchema>) {
   const { userId: clerkUserId } = await auth();
@@ -40,7 +39,7 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
     await db.insert(transactions).values({
       ...rest,
       amount: amount,
-      transactionDate: format(transactionDate, "yyyy-MM-dd"),
+      transactionDate: transactionDate,
       userId: user.id,
       categoryId: categoryIdAsInt,
     });

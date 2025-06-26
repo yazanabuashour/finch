@@ -19,7 +19,7 @@ export type TransactionWithCategory = {
   id: number;
   description: string | null;
   amount: string;
-  transactionDate: string;
+  transactionDate: Date;
   type: "expense" | "income";
   category: {
     name: string;
@@ -91,11 +91,8 @@ export default async function HistoryPage(props: {
       .where(
         and(
           eq(transactions.userId, user.id),
-          gte(
-            transactions.transactionDate,
-            startDate.toISOString().slice(0, 10),
-          ),
-          lte(transactions.transactionDate, endDate.toISOString().slice(0, 10)),
+          gte(transactions.transactionDate, startDate),
+          lte(transactions.transactionDate, endDate),
         ),
       )
       .orderBy(sql`${transactions.transactionDate} DESC`);

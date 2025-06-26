@@ -12,8 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-// Import the type from the page component where it's now defined
 import type { TransactionWithCategory } from "~/app/history/page";
+import { formatDate } from "~/lib/utils";
 
 interface TransactionListProps {
   filter: "all" | "expense" | "income";
@@ -79,7 +79,9 @@ export function TransactionList({
             ) : (
               filteredTransactions.map((transaction) => (
                 <TableRow key={transaction.id}>
-                  <TableCell>{transaction.transactionDate}</TableCell>
+                  <TableCell>
+                    {formatDate(transaction.transactionDate)}
+                  </TableCell>
                   <TableCell>{transaction.description}</TableCell>
                   <TableCell>
                     <Badge variant="outline">

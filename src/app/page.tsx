@@ -8,12 +8,31 @@ import {
 import { Overview } from "~/components/overview-chart";
 import { RecentTransactions } from "~/components/recent-transactions";
 import { MonthSummary } from "~/components/month-summary";
+import {
+  getTransactions,
+  getMonthSummary,
+  getMonthlyTrend,
+} from "~/server/queries";
+import { auth } from "@clerk/nextjs/server";
 
-export default function Dashboard() {
+export default async function Dashboard() {
+  const { userId } = await auth();
+  if (!userId) {
+    return <div>User not found</div>;
+  }
+
+  const transactions = await getTransactions(userId);
+  const monthSummary = await getMonthSummary(
+    userId,
+    new Date().getFullYear(),
+    new Date().getMonth() + 1,
+  );
+  const monthlyTrend = await getMonthlyTrend(userId);
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MonthSummary />
+        <MonthSummary summary={monthSummary} />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
@@ -22,7 +41,7 @@ export default function Dashboard() {
             <CardDescription>Your monthly spending and income</CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
-            <Overview />
+            <Overview data={monthlyTrend} />
           </CardContent>
         </Card>
         <Card className="col-span-3">
@@ -31,7 +50,7 @@ export default function Dashboard() {
             <CardDescription>Your latest expenses and income</CardDescription>
           </CardHeader>
           <CardContent>
-            <RecentTransactions />
+            <RecentTransactions transactions={transactions} />
           </CardContent>
         </Card>
       </div>

@@ -7,3 +7,4 @@
 [ ] Should description be notNull on transaction table?
 [ ] Ability to edit past transactions
 [ ] Make sure any state is managed by url params
+[ ] Disable or add loading text for Add Transaction button when submitting

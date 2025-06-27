@@ -60,15 +60,16 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
 
     if (result.success) {
       toast.success(result.message);
+      const currentType = form.getValues("type");
       form.reset({
         description: "",
         amount: "",
         transactionDate: new Date(),
-        type: "expense",
-        categoryId: "",
+        type: currentType,
+        categoryId:
+          currentType === "income" ? form.getValues("categoryId") : "",
       });
     } else {
-      // Display a generic error or specific field errors
       toast.error(result.message || "An error occurred.");
       console.error("Form submission failed:", result.errors);
     }

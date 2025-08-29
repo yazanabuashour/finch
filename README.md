@@ -62,5 +62,6 @@ This command will update your database to match the schema, which is useful for 
 - [ ] Make sure any state is managed by url params
 - [ ] Disable or add loading text for Add Transaction button when submitting
 - [ ] Design overhaul
+    - [ ] Improve mobile responsiveness
 - [ ] Multi-month transaction search
 

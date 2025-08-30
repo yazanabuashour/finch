@@ -4,8 +4,8 @@ import type z from "zod";
 import { validationSchema } from "./shared";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "~/server/db";
-import { users, transactions } from "~/server/db/schema";
-import { eq } from "drizzle-orm";
+import { users, transactions, categories } from "~/server/db/schema";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 export async function submitFormAction(data: z.infer<typeof validationSchema>) {
@@ -38,6 +38,30 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
 
     if (!categoryIdAsInt) {
       return { success: false, message: "Category ID is null." };
+    }
+
+    // Validate category belongs to user and matches transaction type rules
+    const [category] = await db
+      .select({ id: categories.id, name: categories.name })
+      .from(categories)
+      .where(and(eq(categories.id, categoryIdAsInt), eq(categories.userId, user.id)));
+
+    if (!category) {
+      return { success: false, message: "Invalid category selection." };
+    }
+
+    if (rest.type === "income" && category.name !== "Income") {
+      return {
+        success: false,
+        message: 'Income transactions must use the "Income" category.',
+      };
+    }
+
+    if (rest.type === "expense" && category.name === "Income") {
+      return {
+        success: false,
+        message: 'Expense transactions cannot use the "Income" category.',
+      };
     }
 
     await db.insert(transactions).values({

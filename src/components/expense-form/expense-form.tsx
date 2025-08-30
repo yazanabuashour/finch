@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { CalendarIcon } from "lucide-react";
@@ -77,11 +77,13 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
 
   const transactionType = form.watch("type");
 
+  const incomeCategory = useMemo(
+    () => categories.find((category) => category.name === "Income"),
+    [categories],
+  );
+
   useEffect(() => {
     if (transactionType === "income") {
-      const incomeCategory = categories.find(
-        (category) => category.name === "Income",
-      );
       if (incomeCategory) {
         form.setValue("categoryId", incomeCategory.id.toString(), {
           shouldValidate: true,
@@ -89,8 +91,14 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
       } else {
         toast.error("Income category not found. Please create it.");
       }
+    } else {
+      // When switching back to expense, clear Income selection if set
+      const currentCategory = form.getValues("categoryId");
+      if (incomeCategory && currentCategory === incomeCategory.id.toString()) {
+        form.setValue("categoryId", "", { shouldValidate: true });
+      }
     }
-  }, [transactionType, form, categories]);
+  }, [transactionType, form, incomeCategory]);
 
   return (
     <Form {...form}>
@@ -204,6 +212,9 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
                 </FormControl>
                 <SelectContent>
                   {categories
+                    .filter((c) =>
+                      transactionType === "expense" ? c.name !== "Income" : true,
+                    )
                     .sort((a, b) => a.name.localeCompare(b.name))
                     .map((category) => (
                       <SelectItem

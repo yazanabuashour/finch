@@ -74,3 +74,4 @@ This command will update your database to match the schema, which is useful for 
   - Make `(categories.id, categories.type)` unique; reference from `transactions(category_id, type)` and drop the old FK on `category_id`.
   - Add backfill + migration and keep `transactions.type` for query performance and historical stability.
 - [ ] add db:push as part of CI/CD
+- [ ] resetting development db from production should change the user id to match the development user id

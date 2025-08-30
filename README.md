@@ -68,3 +68,4 @@ This command will update your database to match the schema, which is useful for 
 - [ ] Vercel development/staging environment
 - [ ] bug: selecting "income" but from expense radio button
 - [ ] development environment slowness
+- [ ] long descriptions should be truncated on dashboard's recent transactions

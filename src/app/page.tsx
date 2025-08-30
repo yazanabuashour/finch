@@ -46,7 +46,7 @@ export default async function Dashboard() {
         <MonthSummary summary={summaryData} />
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
+        <Card className="lg:col-span-4">
           <CardHeader>
             <CardTitle>Overview</CardTitle>
             <CardDescription>Your monthly spending and income</CardDescription>
@@ -55,7 +55,7 @@ export default async function Dashboard() {
             <Overview data={monthlyTrend} />
           </CardContent>
         </Card>
-        <Card className="col-span-3">
+        <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
             <CardDescription>Your latest expenses and income</CardDescription>

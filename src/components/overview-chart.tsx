@@ -55,13 +55,13 @@ export function Overview({ data }: OverviewProps) {
         <Bar
           dataKey="income"
           name="Income"
-          fill="#22c55e"
+          fill="var(--chart-1)"
           radius={[4, 4, 0, 0]}
         />
         <Bar
           dataKey="expenses"
           name="Expenses"
-          fill="#ef4444"
+          fill="var(--destructive)"
           radius={[4, 4, 0, 0]}
         />
       </BarChart>

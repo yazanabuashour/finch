@@ -61,9 +61,9 @@ This command will update your database to match the schema, which is useful for 
 - [ ] Ability to edit past transactions
 - [ ] Make sure any state is managed by url params
 - [ ] Disable or add loading text for Add Transaction button when submitting
-- [ ] Design overhaul
-  - [ ] Improve mobile responsiveness
-  - [ ] long descriptions should be truncated on dashboard's recent transactions
+- [x] Design overhaul
+  - [x] Improve mobile responsiveness
+  - [x] long descriptions should be truncated on dashboard's recent transactions
 - [ ] Multi-month transaction search
 - [ ] Fetch secrets and populate local .env file
 - [ ] Vercel development/staging environment
@@ -75,3 +75,14 @@ This command will update your database to match the schema, which is useful for 
   - Add backfill + migration and keep `transactions.type` for query performance and historical stability.
 - [ ] add db:push as part of CI/CD
 - [ ] resetting development db from production should change the user id to match the development user id
+- [ ] add tests
+- [ ] use react compiler
+- [ ] backfill health-related transactions to use the health category
+
+## Design Overhaul
+
+- Sticky, blurred header for better navigation on mobile and desktop.
+- Consistent currency formatting across dashboard, lists, and summaries.
+- Truncated long descriptions in Recent Transactions and History to prevent UI overflow.
+- Improved small-screen spacing via container padding and responsive stacks.
+- Minor accessibility polish: labeled mobile menu trigger, larger touch targets.

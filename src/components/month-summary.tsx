@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { formatCurrency } from "~/lib/utils";
 import { ArrowDownIcon, ArrowUpIcon, DollarSign, Wallet } from "lucide-react";
 
 interface MonthSummaryProps {
@@ -16,23 +17,19 @@ export function MonthSummary({ summary }: MonthSummaryProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-          <ArrowUpIcon className="h-4 w-4 text-green-500" />
+          <ArrowUpIcon className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            ${summary.totalIncome.toFixed(2)}
-          </div>
+          <div className="text-2xl font-bold">{formatCurrency(summary.totalIncome)}</div>
         </CardContent>
       </Card>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Spending</CardTitle>
-          <ArrowDownIcon className="h-4 w-4 text-red-500" />
+          <ArrowDownIcon className="h-4 w-4 text-destructive" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            ${summary.totalSpending.toFixed(2)}
-          </div>
+          <div className="text-2xl font-bold">{formatCurrency(summary.totalSpending)}</div>
         </CardContent>
       </Card>
       <Card>
@@ -41,9 +38,7 @@ export function MonthSummary({ summary }: MonthSummaryProps) {
           <Wallet className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            ${summary.netSavings.toFixed(2)}
-          </div>
+          <div className="text-2xl font-bold">{formatCurrency(summary.netSavings)}</div>
         </CardContent>
       </Card>
       <Card>
@@ -52,10 +47,7 @@ export function MonthSummary({ summary }: MonthSummaryProps) {
           <DollarSign className="text-muted-foreground h-4 w-4" />
         </CardHeader>
         <CardContent>
-          {/* Access totalCash from the summary object */}
-          <div className="text-2xl font-bold">
-            ${summary.totalCash.toFixed(2)}
-          </div>
+          <div className="text-2xl font-bold">{formatCurrency(summary.totalCash)}</div>
         </CardContent>
       </Card>
     </>

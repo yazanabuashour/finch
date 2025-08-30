@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning className={`${geist.variable}`}>
-        <body>
+        <body className="antialiased">
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -34,7 +34,7 @@ export default function RootLayout({
           >
             <div className="flex min-h-screen flex-col">
               <Navigation />
-              <main className="container mx-auto flex-1 py-6">{children}</main>
+              <main className="container mx-auto flex-1 px-4 py-6">{children}</main>
             </div>
             <Toaster />
           </ThemeProvider>

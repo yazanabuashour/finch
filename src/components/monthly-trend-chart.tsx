@@ -56,22 +56,25 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
             type="monotone"
             dataKey="income"
             stackId="1"
-            stroke="#10b981"
-            fill="#10b98120"
+            stroke="var(--chart-1)"
+            fill="var(--chart-1)"
+            fillOpacity={0.12}
           />
           <Area
             type="monotone"
             dataKey="expenses"
             stackId="2"
-            stroke="#ef4444"
-            fill="#ef444420"
+            stroke="var(--destructive)"
+            fill="var(--destructive)"
+            fillOpacity={0.12}
           />
           <Area
             type="monotone"
             dataKey="savings"
             stackId="3"
-            stroke="#3b82f6"
-            fill="#3b82f620"
+            stroke="var(--chart-2)"
+            fill="var(--chart-2)"
+            fillOpacity={0.12}
           />
         </AreaChart>
       </ResponsiveContainer>

@@ -2,7 +2,7 @@ import { Badge } from "~/components/ui/badge";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
 import type { Transaction } from "~/server/db/schema";
-import { formatDate } from "~/lib/utils";
+import { formatCurrency, formatDate } from "~/lib/utils";
 
 interface RecentTransactionsProps {
   transactions: (Transaction & { category: { name: string } | null })[];
@@ -15,9 +15,9 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
         {transactions.map((transaction) => (
           <div
             key={transaction.id}
-            className="flex items-center justify-between"
+            className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex min-w-0 flex-1 items-center gap-4">
               <div
                 className={`rounded-full p-2 ${
                   transaction.type === "expense" ? "bg-red-100" : "bg-green-100"
@@ -29,8 +29,8 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                   <ArrowUpIcon className="h-4 w-4 text-green-500" />
                 )}
               </div>
-              <div>
-                <p className="text-sm leading-none font-medium">
+              <div className="min-w-0">
+                <p className="text-sm font-medium leading-none truncate max-w-[12rem] sm:max-w-[18rem] lg:max-w-[14rem]">
                   {transaction.description}
                 </p>
                 <p className="text-muted-foreground text-sm">
@@ -38,17 +38,15 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2 whitespace-nowrap sm:self-auto">
               <Badge variant="outline">{transaction.category?.name}</Badge>
               <span
-                className={`font-medium ${
-                  transaction.type === "expense"
-                    ? "text-red-500"
-                    : "text-green-500"
+                className={`font-medium tabular-nums ${
+                  transaction.type === "expense" ? "text-destructive" : "text-primary"
                 }`}
               >
-                {transaction.type === "expense" ? "-" : "+"}$
-                {transaction.amount}
+                {transaction.type === "expense" ? "-" : "+"}
+                {formatCurrency(Number(transaction.amount))}
               </span>
             </div>
           </div>

@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import type { TransactionWithCategory } from "~/app/history/page";
-import { formatDate } from "~/lib/utils";
+import { formatCurrency, formatDate } from "~/lib/utils";
 
 interface TransactionListProps {
   filter: "all" | "expense" | "income";
@@ -57,13 +57,13 @@ export function TransactionList({
       </div>
 
       <div className="rounded-md border">
-        <Table>
+        <Table className="min-w-[700px]">
           <TableHeader>
             <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="w-[140px]">Date</TableHead>
+              <TableHead className="w-[50%]">Description</TableHead>
+              <TableHead className="w-[180px]">Category</TableHead>
+              <TableHead className="text-right w-[140px]">Amount</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -82,7 +82,9 @@ export function TransactionList({
                   <TableCell>
                     {formatDate(transaction.transactionDate)}
                   </TableCell>
-                  <TableCell>{transaction.description}</TableCell>
+                  <TableCell className="max-w-[16rem] truncate sm:max-w-[28rem]">
+                    {transaction.description}
+                  </TableCell>
                   <TableCell>
                     <Badge variant="outline">
                       {transaction.category?.name ?? "Uncategorized"}
@@ -90,13 +92,11 @@ export function TransactionList({
                   </TableCell>
                   <TableCell
                     className={`text-right font-medium ${
-                      transaction.type === "expense"
-                        ? "text-red-500"
-                        : "text-green-500"
+                      transaction.type === "expense" ? "text-destructive" : "text-primary"
                     }`}
                   >
-                    {transaction.type === "expense" ? "-" : "+"}$
-                    {parseFloat(transaction.amount).toFixed(2)}
+                    {transaction.type === "expense" ? "-" : "+"}
+                    {formatCurrency(Number(transaction.amount))}
                   </TableCell>
                 </TableRow>
               ))

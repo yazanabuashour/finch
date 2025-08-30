@@ -16,26 +16,36 @@ interface CategoryChartProps {
   }[];
 }
 
-const CATEGORY_COLORS = [
-  "#3b82f6", // blue
-  "#ef4444", // red
-  "#10b981", // emerald
+import { useEffect, useState } from "react";
+
+const FALLBACK_COLORS = [
+  "#10b981", // primary-like
+  "#06b6d4", // chart-2
   "#f59e0b", // amber
   "#8b5cf6", // violet
-  "#06b6d4", // cyan
-  "#84cc16", // lime
-  "#f97316", // orange
-  "#ec4899", // pink
-  "#6b7280", // gray
-  "#14b8a6", // teal
-  "#a855f7", // purple
+  "#3b82f6", // blue
 ];
 
 export function CategoryChart({ data }: CategoryChartProps) {
+  const [palette, setPalette] = useState<string[]>(FALLBACK_COLORS);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const style = getComputedStyle(document.documentElement);
+    const vars = [
+      style.getPropertyValue("--chart-1").trim(),
+      style.getPropertyValue("--chart-2").trim(),
+      style.getPropertyValue("--chart-3").trim(),
+      style.getPropertyValue("--chart-4").trim(),
+      style.getPropertyValue("--chart-5").trim(),
+    ].filter(Boolean) as string[];
+    if (vars.length) setPalette(vars);
+  }, []);
+
   const chartData = data.map((d, index) => ({
     name: d.name,
     value: d.amount,
-    color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
+    color: palette[index % palette.length],
   }));
 
   return (
@@ -50,6 +60,10 @@ export function CategoryChart({ data }: CategoryChartProps) {
             outerRadius={90}
             paddingAngle={2}
             dataKey="value"
+            isAnimationActive
+            animationDuration={280}
+            animationBegin={0}
+            animationEasing="ease-out"
             label={({ name, percent }) => {
               if (percent === undefined) return "";
               return `${name} ${(percent * 100).toFixed(0)}%`;

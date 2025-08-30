@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { PlusCircle, BarChart3, History, Home } from "lucide-react";
@@ -9,6 +10,7 @@ import { Menu } from "lucide-react";
 
 export function Navigation() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
   const routes = [
     {
@@ -38,10 +40,14 @@ export function Navigation() {
   ];
 
   return (
-    <div className="border-b">
-      <div className="container mx-auto flex h-16 items-center">
+    <div className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto flex h-16 items-center px-4">
         <div className="mr-6 flex items-center space-x-2">
-          <span className="text-xl font-bold">Finch</span>
+          <Link href="/" className="flex items-center gap-2">
+            <span className="bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-xl font-bold tracking-tight text-transparent">
+              Finch
+            </span>
+          </Link>
         </div>
 
         {/* Desktop Navigation */}
@@ -64,9 +70,9 @@ export function Navigation() {
 
         {/* Mobile Navigation */}
         <div className="ml-auto md:hidden">
-          <Sheet>
+          <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" aria-label="Open Menu">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -77,10 +83,14 @@ export function Navigation() {
                     key={route.href}
                     asChild
                     variant={route.active ? "default" : "ghost"}
-                    className="justify-start text-sm font-medium transition-colors"
+                    className="justify-start text-base font-medium transition-colors"
                     size="sm"
                   >
-                    <Link href={route.href} className="flex items-center gap-2">
+                    <Link
+                      href={route.href}
+                      className="flex items-center gap-2"
+                      onClick={() => setOpen(false)}
+                    >
                       <route.icon className="h-4 w-4" />
                       {route.label}
                     </Link>

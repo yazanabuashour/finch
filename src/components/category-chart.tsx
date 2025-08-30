@@ -38,7 +38,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
       style.getPropertyValue("--chart-3").trim(),
       style.getPropertyValue("--chart-4").trim(),
       style.getPropertyValue("--chart-5").trim(),
-    ].filter(Boolean) as string[];
+    ].filter(Boolean);
     if (vars.length) setPalette(vars);
   }, []);
 

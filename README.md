@@ -63,13 +63,13 @@ This command will update your database to match the schema, which is useful for 
 - [ ] Disable or add loading text for Add Transaction button when submitting
 - [ ] Design overhaul
   - [ ] Improve mobile responsiveness
+  - [ ] long descriptions should be truncated on dashboard's recent transactions
 - [ ] Multi-month transaction search
 - [ ] Fetch secrets and populate local .env file
 - [ ] Vercel development/staging environment
 - [x] bug: selecting "income" but from expense radio button
   - Fixed by filtering categories by type and adding server-side validation
 - [ ] development environment slowness
-- [ ] long descriptions should be truncated on dashboard's recent transactions
 - [ ] DB constraint: enforce `transactions.type` matches `categories.type`
   - Make `(categories.id, categories.type)` unique; reference from `transactions(category_id, type)` and drop the old FK on `category_id`.
   - Add backfill + migration and keep `transactions.type` for query performance and historical stability.

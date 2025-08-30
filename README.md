@@ -62,6 +62,8 @@ This command will update your database to match the schema, which is useful for 
 - [ ] Make sure any state is managed by url params
 - [ ] Disable or add loading text for Add Transaction button when submitting
 - [ ] Design overhaul
-    - [ ] Improve mobile responsiveness
+  - [ ] Improve mobile responsiveness
 - [ ] Multi-month transaction search
-
+- [ ] Fetch secrets and populate local .env file
+- [ ] Vercel development/staging environment
+- [ ] bug: selecting "income" but from expense radio button

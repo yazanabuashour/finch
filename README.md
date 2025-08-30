@@ -70,3 +70,6 @@ This command will update your database to match the schema, which is useful for 
   - Fixed by filtering categories by type and adding server-side validation
 - [ ] development environment slowness
 - [ ] long descriptions should be truncated on dashboard's recent transactions
+- [ ] DB constraint: enforce `transactions.type` matches `categories.type`
+  - Make `(categories.id, categories.type)` unique; reference from `transactions(category_id, type)` and drop the old FK on `category_id`.
+  - Add backfill + migration and keep `transactions.type` for query performance and historical stability.

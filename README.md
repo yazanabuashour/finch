@@ -67,3 +67,4 @@ This command will update your database to match the schema, which is useful for 
 - [ ] Fetch secrets and populate local .env file
 - [ ] Vercel development/staging environment
 - [ ] bug: selecting "income" but from expense radio button
+- [ ] development environment slowness

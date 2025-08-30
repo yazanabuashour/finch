@@ -13,10 +13,20 @@ export const validationSchema = z.object({
       },
     ),
   transactionDate: z.date({
-    required_error: "Please select a date.",
+    error: (issue) => {
+      if (issue.input === undefined) {
+        return { message: "Please select a date." };
+      }
+      return { message: "Invalid date." };
+    },
   }),
   type: z.enum(["expense", "income"], {
-    required_error: "Please select a transaction type.",
+    error: (issue) => {
+      if (issue.input === undefined) {
+        return { message: "Please select a transaction type." };
+      }
+      return { message: "Invalid transaction type." };
+    },
   }),
   categoryId: z.string().min(1, { message: "Category is required." }),
 });

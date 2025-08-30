@@ -42,7 +42,7 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
 
     // Validate category belongs to user and matches transaction type rules
     const [category] = await db
-      .select({ id: categories.id, name: categories.name })
+      .select({ id: categories.id, name: categories.name, type: categories.type })
       .from(categories)
       .where(and(eq(categories.id, categoryIdAsInt), eq(categories.userId, user.id)));
 
@@ -50,17 +50,10 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
       return { success: false, message: "Invalid category selection." };
     }
 
-    if (rest.type === "income" && category.name !== "Income") {
+    if (rest.type !== category.type) {
       return {
         success: false,
-        message: 'Income transactions must use the "Income" category.',
-      };
-    }
-
-    if (rest.type === "expense" && category.name === "Income") {
-      return {
-        success: false,
-        message: 'Expense transactions cannot use the "Income" category.',
+        message: "Selected category does not match transaction type.",
       };
     }
 

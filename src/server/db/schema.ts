@@ -32,6 +32,7 @@ export const categories = pgTable(
   {
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 100 }).notNull(),
+    type: transactionTypeEnum("type").notNull().default("expense"),
     userId: integer("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -95,5 +96,4 @@ export type NewCategory = InferInsertModel<typeof categories>;
 
 export type Transaction = InferSelectModel<typeof transactions>;
 export type NewTransaction = InferInsertModel<typeof transactions>;
-
 

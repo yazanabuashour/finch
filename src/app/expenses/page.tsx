@@ -9,14 +9,14 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { db } from "~/server/db";
-import { users } from "~/server/db/schema";
+import { users, categories as categoriesTable } from "~/server/db/schema";
 
 export default async function ExpensesPage() {
   const { userId } = await auth();
   if (!userId) {
     return null;
   }
-  const user = await db.query.users.findFirst({
+  let user = await db.query.users.findFirst({
     where: eq(users.clerkUserId, userId),
     with: {
       categories: true,
@@ -26,6 +26,36 @@ export default async function ExpensesPage() {
   if (!user) {
     return null;
   }
+  // Ensure each user has a single Income category
+  const existingIncomeByType = user.categories.find((c) => c.type === "income");
+  const existingIncomeByName = user.categories.find((c) => c.name === "Income");
+  if (!existingIncomeByType) {
+    if (existingIncomeByName) {
+      // Backfill: update existing "Income" category to income type
+      await db
+        .update(categoriesTable)
+        .set({ type: "income" })
+        .where(eq(categoriesTable.id, existingIncomeByName.id));
+      user = {
+        ...user,
+        categories: user.categories.map((c) =>
+          c.id === existingIncomeByName.id ? { ...c, type: "income" } : c,
+        ),
+      } as typeof user;
+    } else {
+      const [created] = await db
+        .insert(categoriesTable)
+        .values({ name: "Income", type: "income", userId: user.id })
+        .returning();
+      if (created) {
+        user = {
+          ...user,
+          categories: [...user.categories, created],
+        } as typeof user;
+      }
+    }
+  }
+
   return (
     <div className="mx-auto max-w-2xl">
       <Card>

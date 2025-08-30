@@ -78,7 +78,7 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
   const transactionType = form.watch("type");
 
   const incomeCategory = useMemo(
-    () => categories.find((category) => category.name === "Income"),
+    () => categories.find((category) => category.type === "income"),
     [categories],
   );
 
@@ -200,11 +200,7 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Category</FormLabel>
-              <Select
-                value={field.value}
-                onValueChange={field.onChange}
-                disabled={transactionType === "income"}
-              >
+              <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
@@ -213,7 +209,9 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
                 <SelectContent>
                   {categories
                     .filter((c) =>
-                      transactionType === "expense" ? c.name !== "Income" : true,
+                      transactionType === "expense"
+                        ? c.type === "expense"
+                        : c.type === "income",
                     )
                     .sort((a, b) => a.name.localeCompare(b.name))
                     .map((category) => (
@@ -226,6 +224,11 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
                     ))}
                 </SelectContent>
               </Select>
+              {transactionType === "income" && (
+                <p className="text-muted-foreground text-sm">
+                  Using your Income category. Categories are for expenses only.
+                </p>
+              )}
               <FormMessage />
             </FormItem>
           )}

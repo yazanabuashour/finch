@@ -66,6 +66,7 @@ This command will update your database to match the schema, which is useful for 
 - [ ] Multi-month transaction search
 - [ ] Fetch secrets and populate local .env file
 - [ ] Vercel development/staging environment
-- [ ] bug: selecting "income" but from expense radio button
+- [x] bug: selecting "income" but from expense radio button
+  - Fixed by filtering categories by type and adding server-side validation
 - [ ] development environment slowness
 - [ ] long descriptions should be truncated on dashboard's recent transactions

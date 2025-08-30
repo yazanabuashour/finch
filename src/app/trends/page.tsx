@@ -26,7 +26,7 @@ export default async function TrendsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Spending Trends</h1>
+      <h1 className="text-2xl font-bold heading-gradient">Spending Trends</h1>
 
       <Tabs defaultValue="categories" className="w-full">
         <TabsList className="grid w-full grid-cols-2">

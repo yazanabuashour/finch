@@ -49,7 +49,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
   }));
 
   return (
-    <div className="h-[350px] w-full">
+    <div className="h-[350px] w-full chart-glow rounded-lg">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie

@@ -21,16 +21,17 @@ interface OverviewProps {
 
 export function Overview({ data }: OverviewProps) {
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <BarChart
-        data={data}
-        margin={{
-          top: 10,
-          right: 30,
-          left: 60,
-          bottom: 0,
-        }}
-      >
+    <div className="chart-glow rounded-lg">
+      <ResponsiveContainer width="100%" height={350}>
+        <BarChart
+          data={data}
+          margin={{
+            top: 10,
+            right: 30,
+            left: 60,
+            bottom: 0,
+          }}
+        >
         <CartesianGrid strokeDasharray="3 3" vertical={false} />
         <XAxis dataKey="month" tickLine={false} axisLine={false} />
         <YAxis
@@ -65,6 +66,7 @@ export function Overview({ data }: OverviewProps) {
           radius={[4, 4, 0, 0]}
         />
       </BarChart>
-    </ResponsiveContainer>
+      </ResponsiveContainer>
+    </div>
   );
 }

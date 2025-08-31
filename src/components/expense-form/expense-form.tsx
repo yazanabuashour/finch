@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import type { Category } from "~/server/db/schema";
+import type { CategoryLite } from "~/components/category-select";
 import { submitFormAction } from "./action";
 import { validationSchema } from "./shared";
 import type z from "zod";
@@ -13,7 +13,7 @@ import { Loader2 } from "lucide-react";
 import { TransactionFields } from "~/components/transaction-form/transaction-fields";
 
 interface ExpenseFormProps {
-  categories: Category[];
+  categories: CategoryLite[];
 }
 
 type FormData = z.infer<typeof validationSchema>;

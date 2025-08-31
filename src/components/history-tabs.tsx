@@ -4,10 +4,10 @@ import { useMemo } from "react";
 import { TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { ControlledTabs } from "~/components/controlled-tabs";
 import { TransactionList } from "~/components/transaction-list";
-import type { CategoryLite, TransactionWithCategory } from "~/app/history/page";
+import type { CategoryLite, HistoryTransaction } from "~/server/queries";
 
 interface HistoryTabsProps {
-  transactions: (TransactionWithCategory & { categoryId: number })[];
+  transactions: (HistoryTransaction & { categoryId: number | null })[];
   categories: CategoryLite[];
 }
 

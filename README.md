@@ -59,11 +59,10 @@ This command will update your database to match the schema, which is useful for 
 
 ## ✨ Features
 
-- [ ] Ability to see trends/breakdown for any past month
 - [ ] yearly summaries
 - [ ] multi-month select in history page
 - [ ] improve search/filter performance in history when viewing all transactions
-- [ ] system prompt or other ai instructions
+- [ ] ability to add a new category
 
 ## 🗄️ Database
 
@@ -83,3 +82,4 @@ This command will update your database to match the schema, which is useful for 
 - [ ] add db:push as part of CI/CD
 - [ ] prettier in ci/cd
 - [ ] add tests
+- [ ] system prompt or other ai instructions

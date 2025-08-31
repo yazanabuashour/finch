@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import type { TransactionWithCategory, CategoryLite } from "~/app/history/page";
+import type { HistoryTransaction, CategoryLite } from "~/server/queries";
 import { formatCurrency, formatDate } from "~/lib/utils";
 import { EditTransactionDialog } from "~/components/transaction-edit/edit-transaction-dialog";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -23,7 +23,7 @@ import { bulkUpdateTransactionCategoryAction } from "~/components/transaction-ed
 
 interface TransactionListProps {
   filter: "all" | "expense" | "income";
-  transactions: (TransactionWithCategory & { categoryId: number })[];
+  transactions: (HistoryTransaction & { categoryId: number | null })[];
   categories: CategoryLite[];
 }
 

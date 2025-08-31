@@ -3,6 +3,8 @@ import { db } from "./db";
 import { users, transactions } from "./db/schema";
 import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { enumerateMonthsUTC, monthKeyUTC } from "./date-utils";
+import { endOfMonth, startOfMonth, parse } from "date-fns";
+import { categories } from "./db/schema";
 
 // Shared: available months for a user (YYYY-MM with formatted labels)
 export const getAvailableMonths = async (
@@ -34,6 +36,95 @@ export const getAvailableMonths = async (
       (m): m is { value: string; label: string } =>
         m !== null && m !== undefined,
     );
+};
+
+// Lightweight user lookup used by server components/actions
+export const getUserIdByClerkId = async (
+  clerkUserId: string,
+): Promise<number> => {
+  const user = await db.query.users.findFirst({
+    where: eq(users.clerkUserId, clerkUserId),
+    columns: { id: true },
+  });
+  if (!user) throw new Error("User not found");
+  return user.id;
+};
+
+// History page queries extracted from server component
+export type HistoryTransaction = {
+  id: number;
+  description: string | null;
+  amount: string;
+  transactionDate: Date;
+  type: "expense" | "income";
+  categoryId: number | null;
+  category: { name: string } | null;
+};
+
+export type CategoryLite = {
+  id: number;
+  name: string;
+  type: "expense" | "income";
+};
+
+export const getUserCategoriesLite = async (
+  clerkUserId: string,
+): Promise<CategoryLite[]> => {
+  const userId = await getUserIdByClerkId(clerkUserId);
+
+  const rows = await db
+    .select({ id: categories.id, name: categories.name, type: categories.type })
+    .from(categories)
+    .where(eq(categories.userId, userId));
+  return rows;
+};
+
+export const getHistoryTransactions = async (
+  clerkUserId: string,
+  selectedMonth: string,
+): Promise<HistoryTransaction[]> => {
+  const userId = await getUserIdByClerkId(clerkUserId);
+
+  if (selectedMonth === "all") {
+    const result: HistoryTransaction[] = await db
+      .select({
+        id: transactions.id,
+        description: transactions.description,
+        amount: transactions.amount,
+        transactionDate: transactions.transactionDate,
+        type: transactions.type,
+        categoryId: transactions.categoryId,
+        category: { name: categories.name },
+      })
+      .from(transactions)
+      .leftJoin(categories, eq(transactions.categoryId, categories.id))
+      .where(eq(transactions.userId, userId))
+      .orderBy(sql`${transactions.transactionDate} DESC`);
+    return result;
+  }
+
+  const parsedDate = parse(selectedMonth, "yyyy-MM", new Date());
+  const result: HistoryTransaction[] = await db
+    .select({
+      id: transactions.id,
+      description: transactions.description,
+      amount: transactions.amount,
+      transactionDate: transactions.transactionDate,
+      type: transactions.type,
+      categoryId: transactions.categoryId,
+      category: { name: categories.name },
+    })
+    .from(transactions)
+    .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        gte(transactions.transactionDate, startOfMonth(parsedDate)),
+        lte(transactions.transactionDate, endOfMonth(parsedDate)),
+      ),
+    )
+    .orderBy(sql`${transactions.transactionDate} DESC`);
+  return result;
 };
 
 export const getTransactions = async (
@@ -335,4 +426,44 @@ export const getMonthlyTrendByMonths = async (
       savings: data.income - data.expenses,
     };
   });
+};
+
+// Expenses page bootstrap: ensure a single Income category exists
+export const ensureIncomeCategory = async (
+  clerkUserId: string,
+): Promise<CategoryLite[]> => {
+  const userId = await getUserIdByClerkId(clerkUserId);
+
+  const current = await db
+    .select({ id: categories.id, name: categories.name, type: categories.type })
+    .from(categories)
+    .where(eq(categories.userId, userId));
+
+  const existingIncomeByType = current.find((c) => c.type === "income");
+  const existingIncomeByName = current.find((c) => c.name === "Income");
+
+  if (existingIncomeByType) {
+    return current;
+  }
+
+  if (existingIncomeByName) {
+    await db
+      .update(categories)
+      .set({ type: "income" })
+      .where(eq(categories.id, existingIncomeByName.id));
+    return current.map((c) =>
+      c.id === existingIncomeByName.id ? { ...c, type: "income" } : c,
+    );
+  }
+
+  const [created] = await db
+    .insert(categories)
+    .values({ name: "Income", type: "income", userId })
+    .returning({
+      id: categories.id,
+      name: categories.name,
+      type: categories.type,
+    });
+
+  return created ? [...current, created] : current;
 };

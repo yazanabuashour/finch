@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { Loader2, Pencil } from "lucide-react";
 import { validationSchema } from "~/components/expense-form/shared";
-import type { TransactionWithCategory } from "~/app/history/page";
+import type { HistoryTransaction } from "~/server/queries";
 import {
   Dialog,
   DialogContent,
@@ -27,18 +27,14 @@ import {
 } from "~/components/transaction-form/transaction-fields";
 import type { UseFormReturn } from "react-hook-form";
 
-export type CategoryLite = {
-  id: number;
-  name: string;
-  type: "expense" | "income";
-};
+import type { CategoryLite } from "~/components/category-select";
 
 const editSchema = validationSchema.extend({ id: z.number().int().positive() });
 
 type EditFormData = z.infer<typeof editSchema>;
 
 interface EditTransactionDialogProps {
-  transaction: TransactionWithCategory & { categoryId: number };
+  transaction: HistoryTransaction & { categoryId: number | null };
   categories: CategoryLite[];
 }
 
@@ -57,7 +53,9 @@ export function EditTransactionDialog({
       amount: String(transaction.amount ?? ""),
       transactionDate: transaction.transactionDate,
       type: transaction.type,
-      categoryId: transaction.categoryId.toString(),
+      categoryId: transaction.categoryId
+        ? transaction.categoryId.toString()
+        : "",
     },
   });
 

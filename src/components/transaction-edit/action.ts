@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "~/server/db";
@@ -104,6 +104,111 @@ export async function updateTransactionAction(data: UpdateTransactionInput) {
     } as const;
   } catch (error) {
     console.error("Error during update:", error);
+    return {
+      success: false,
+      message: `An error occurred while updating. ${
+        error instanceof Error ? error.message : ""
+      }`,
+    } as const;
+  }
+}
+
+const bulkUpdateSchema = z.object({
+  ids: z.array(z.number().int().positive()).min(1),
+  categoryId: z.number().int().positive(),
+});
+
+export type BulkUpdateCategoryInput = z.infer<typeof bulkUpdateSchema>;
+
+export async function bulkUpdateTransactionCategoryAction(
+  data: BulkUpdateCategoryInput,
+) {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) {
+    return { success: false, message: "User not authenticated." } as const;
+  }
+
+  const parseResult = bulkUpdateSchema.safeParse(data);
+  if (!parseResult.success) {
+    return {
+      success: false,
+      message: "Validation failed.",
+      errors: parseResult.error.flatten().fieldErrors,
+    } as const;
+  }
+
+  try {
+    const [user] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.clerkUserId, clerkUserId));
+
+    if (!user) {
+      return { success: false, message: "User not found." } as const;
+    }
+
+    const { ids, categoryId } = parseResult.data;
+
+    // Validate category belongs to user
+    const [category] = await db
+      .select({ id: categories.id, type: categories.type })
+      .from(categories)
+      .where(
+        and(eq(categories.id, categoryId), eq(categories.userId, user.id)),
+      );
+
+    if (!category) {
+      return {
+        success: false,
+        message: "Invalid category selection.",
+      } as const;
+    }
+
+    // Fetch selected transactions to ensure ownership and type compatibility
+    const txs = await db
+      .select({ id: transactions.id, type: transactions.type })
+      .from(transactions)
+      .where(
+        and(inArray(transactions.id, ids), eq(transactions.userId, user.id)),
+      );
+
+    if (txs.length !== ids.length) {
+      return {
+        success: false,
+        message: "One or more transactions were not found.",
+      } as const;
+    }
+
+    // Ensure all selected transactions share the category type
+    const hasMismatch = txs.some((t) => t.type !== category.type);
+    if (hasMismatch) {
+      return {
+        success: false,
+        message:
+          "Selected category type does not match all selected transactions.",
+      } as const;
+    }
+
+    await db
+      .update(transactions)
+      .set({ categoryId })
+      .where(
+        and(
+          inArray(transactions.id, ids),
+          eq(transactions.userId, user.id),
+          eq(transactions.type, category.type),
+        ),
+      );
+
+    revalidatePath("/history");
+    revalidatePath("/");
+
+    return {
+      success: true,
+      message: "Category updated for selected.",
+    } as const;
+  } catch (error) {
+    console.error("Error during bulk update:", error);
     return {
       success: false,
       message: `An error occurred while updating. ${

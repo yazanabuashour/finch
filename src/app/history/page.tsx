@@ -11,8 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { TransactionList } from "~/components/transaction-list";
+import { HistoryTabs } from "~/components/history-tabs";
 import { MonthSelector } from "~/components/month-selector";
 
 export type TransactionWithCategory = {
@@ -157,34 +156,10 @@ export default async function HistoryPage(props: {
         </CardHeader>
         <CardContent>
           {transactionsData.length > 0 ? (
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="expenses">Expenses</TabsTrigger>
-                <TabsTrigger value="income">Income</TabsTrigger>
-              </TabsList>
-              <TabsContent value="all">
-                <TransactionList
-                  filter="all"
-                  transactions={transactionsData}
-                  categories={userCategories}
-                />
-              </TabsContent>
-              <TabsContent value="expenses">
-                <TransactionList
-                  filter="expense"
-                  transactions={transactionsData}
-                  categories={userCategories}
-                />
-              </TabsContent>
-              <TabsContent value="income">
-                <TransactionList
-                  filter="income"
-                  transactions={transactionsData}
-                  categories={userCategories}
-                />
-              </TabsContent>
-            </Tabs>
+            <HistoryTabs
+              transactions={transactionsData}
+              categories={userCategories}
+            />
           ) : (
             <div className="text-muted-foreground py-8 text-center">
               No transactions found for this period.

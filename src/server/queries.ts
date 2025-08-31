@@ -2,6 +2,39 @@ import "server-only";
 import { db } from "./db";
 import { users, transactions } from "./db/schema";
 import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { enumerateMonthsUTC, monthKeyUTC } from "./date-utils";
+
+// Shared: available months for a user (YYYY-MM with formatted labels)
+export const getAvailableMonths = async (
+  clerkUserId: string,
+): Promise<{ value: string; label: string }[]> => {
+  const user = await db.query.users.findFirst({
+    where: eq(users.clerkUserId, clerkUserId),
+    columns: { id: true },
+  });
+  if (!user) throw new Error("User not found");
+
+  const monthsResult: { month: string }[] = await db.execute(sql`
+    SELECT DISTINCT TO_CHAR(${transactions.transactionDate}, 'YYYY-MM') as month
+    FROM ${transactions}
+    WHERE ${transactions.userId} = ${user.id}
+    ORDER BY month DESC
+  `);
+  return monthsResult
+    .map((row) => {
+      if (!row.month) return null;
+      const [y, m] = row.month.split("-") as [string, string];
+      const date = new Date(parseInt(y, 10), parseInt(m, 10) - 1);
+      return {
+        value: row.month,
+        label: date.toLocaleString("en-US", { month: "long", year: "numeric" }),
+      };
+    })
+    .filter(
+      (m): m is { value: string; label: string } =>
+        m !== null && m !== undefined,
+    );
+};
 
 export const getTransactions = async (
   clerkUserId: string,
@@ -195,13 +228,14 @@ export const getMonthlyTrend = async (
     ).padStart(2, "0")}`;
 
     if (!monthlyMap.has(monthKey)) {
-      // Create a UTC date for consistent month formatting
+      // Create a UTC date for consistent month formatting (with year)
       const utcDate = new Date(
         Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1),
       );
       monthlyMap.set(monthKey, {
         month: utcDate.toLocaleString("default", {
           month: "short",
+          year: "2-digit",
           timeZone: "UTC",
         }),
         income: 0,
@@ -219,6 +253,81 @@ export const getMonthlyTrend = async (
 
   const sortedKeys = Array.from(monthlyMap.keys()).sort();
 
+  return sortedKeys.map((key) => {
+    const data = monthlyMap.get(key)!;
+    return {
+      ...data,
+      savings: data.income - data.expenses,
+    };
+  });
+};
+
+// New function: trend over N months, filling empty months with zeros
+export const getMonthlyTrendByMonths = async (
+  clerkUserId: string,
+  months: number,
+) => {
+  const user = await db.query.users.findFirst({
+    where: eq(users.clerkUserId, clerkUserId),
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const today = new Date();
+  const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0); // end of current month
+  const startDate = new Date(
+    today.getFullYear(),
+    today.getMonth() - (months - 1),
+    1,
+  );
+
+  const userTransactions = await db.query.transactions.findMany({
+    where: and(
+      eq(transactions.userId, user.id),
+      gte(transactions.transactionDate, startDate),
+      lte(transactions.transactionDate, endDate),
+    ),
+    orderBy: (transactions, { asc }) => [asc(transactions.transactionDate)],
+  });
+
+  const monthlyMap = new Map<
+    string,
+    { month: string; income: number; expenses: number }
+  >();
+
+  // Prefill months in the range with zeros
+  const monthsList = enumerateMonthsUTC(
+    new Date(Date.UTC(startDate.getFullYear(), startDate.getMonth(), 1)),
+    new Date(Date.UTC(endDate.getFullYear(), endDate.getMonth(), 1)),
+  );
+  for (const m of monthsList) {
+    const key = monthKeyUTC(m);
+    monthlyMap.set(key, {
+      month: m.toLocaleString("default", {
+        month: "short",
+        year: "2-digit",
+        timeZone: "UTC",
+      }),
+      income: 0,
+      expenses: 0,
+    });
+  }
+
+  for (const t of userTransactions) {
+    const date = t.transactionDate;
+    const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+    const monthData = monthlyMap.get(key);
+    if (!monthData) continue;
+    if (t.type === "income") {
+      monthData.income += Number(t.amount);
+    } else {
+      monthData.expenses += Number(t.amount);
+    }
+  }
+
+  const sortedKeys = Array.from(monthlyMap.keys()).sort();
   return sortedKeys.map((key) => {
     const data = monthlyMap.get(key)!;
     return {

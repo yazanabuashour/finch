@@ -16,7 +16,7 @@ interface CategoryChartProps {
   }[];
 }
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 const FALLBACK_COLORS = [
   "#10b981", // primary-like
@@ -27,10 +27,8 @@ const FALLBACK_COLORS = [
 ];
 
 export function CategoryChart({ data }: CategoryChartProps) {
-  const [palette, setPalette] = useState<string[]>(FALLBACK_COLORS);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const palette = useMemo(() => {
+    if (typeof window === "undefined") return FALLBACK_COLORS;
     const style = getComputedStyle(document.documentElement);
     const vars = [
       style.getPropertyValue("--chart-1").trim(),
@@ -39,7 +37,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
       style.getPropertyValue("--chart-4").trim(),
       style.getPropertyValue("--chart-5").trim(),
     ].filter(Boolean);
-    if (vars.length) setPalette(vars);
+    return vars.length ? vars : FALLBACK_COLORS;
   }, []);
 
   const chartData = data.map((d, index) => ({
@@ -60,10 +58,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
             outerRadius={90}
             paddingAngle={2}
             dataKey="value"
-            isAnimationActive
-            animationDuration={280}
-            animationBegin={0}
-            animationEasing="ease-out"
+            isAnimationActive={false}
             label={({ name, percent }) => {
               if (percent === undefined) return "";
               return `${name} ${(percent * 100).toFixed(0)}%`;

@@ -75,3 +75,6 @@ This command will update your database to match the schema, which is useful for 
 - [ ] yearly summaries
 - [ ] improve search/filter performance in history when viewing all transactions
 - [ ] multi-month select in history page
+- [ ] move all db queries to queries.ts
+- [ ] monthly trend animation on chart is broken
+- [ ] client side validation error messages should be improved

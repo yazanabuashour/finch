@@ -13,6 +13,7 @@ import {
 } from "~/components/ui/card";
 import { HistoryTabs } from "~/components/history-tabs";
 import { MonthSelector } from "~/components/month-selector";
+import { getAvailableMonths } from "~/server/queries";
 
 export type TransactionWithCategory = {
   id: number;
@@ -49,30 +50,7 @@ export default async function HistoryPage(props: {
     return <p className="text-center">User not found.</p>;
   }
 
-  const monthsResult: { month: string }[] = await db.execute(sql`
-    SELECT DISTINCT TO_CHAR(${transactions.transactionDate}, 'YYYY-MM') as month
-    FROM ${transactions}
-    WHERE ${transactions.userId} = ${user.id}
-    ORDER BY month DESC
-  `);
-
-  const availableMonths = monthsResult
-    .map((row) => {
-      if (!row.month) return null;
-      const [year, month] = row.month.split("-") as [string, string];
-      const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1);
-      return {
-        value: row.month,
-        label: date.toLocaleString("en-US", {
-          month: "long",
-          year: "numeric",
-        }),
-      };
-    })
-    .filter(
-      (m): m is { value: string; label: string } =>
-        m !== null && m !== undefined,
-    );
+  const availableMonths = await getAvailableMonths(clerkUserId);
 
   const selectedMonth = searchParams?.month ?? availableMonths[0]?.value;
   const viewAllMonths = selectedMonth === "all";

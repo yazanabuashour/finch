@@ -21,13 +21,7 @@ import {
   PopoverTrigger,
 } from "~/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+import { CategorySelect } from "~/components/category-select";
 import { Textarea } from "~/components/ui/textarea";
 import { cn } from "~/lib/utils";
 import type { ExpenseFormData } from "~/components/expense-form/shared";
@@ -176,36 +170,15 @@ export function TransactionFields({
         render={({ field }) => (
           <FormItem>
             <FormLabel>Category</FormLabel>
-            <Select
+            <CategorySelect
+              categories={categories}
               value={field.value}
-              onValueChange={(val) => {
+              onChange={(val) => {
                 field.onChange(val);
                 void form.trigger();
               }}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {categories
-                  .filter((c) =>
-                    transactionType === "expense"
-                      ? c.type === "expense"
-                      : c.type === "income",
-                  )
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((category) => (
-                    <SelectItem
-                      key={category.id}
-                      value={category.id.toString()}
-                    >
-                      {category.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+              filter={transactionType === "expense" ? "expense" : "income"}
+            />
             {transactionType === "income" && (
               <p className="text-muted-foreground text-sm">
                 Using your Income category. Categories are for expenses only.

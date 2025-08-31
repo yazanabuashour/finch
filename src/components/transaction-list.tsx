@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useTransition } from "react";
 import { Search } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
 import { Input } from "~/components/ui/input";
+import { Button } from "~/components/ui/button";
 import {
   Table,
   TableBody,
@@ -17,13 +18,7 @@ import { formatCurrency, formatDate } from "~/lib/utils";
 import { EditTransactionDialog } from "~/components/transaction-edit/edit-transaction-dialog";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+import { CategorySelect } from "~/components/category-select";
 import { bulkUpdateTransactionCategoryAction } from "~/components/transaction-edit/action";
 
 interface TransactionListProps {
@@ -123,17 +118,7 @@ export function TransactionList({
     });
   };
 
-  const selectAllLoaded = () => {
-    setParams((p) =>
-      p.set(
-        "selected",
-        transactions
-          .map((t) => t.id)
-          .filter((id, idx, arr) => arr.indexOf(id) === idx)
-          .join(","),
-      ),
-    );
-  };
+  // Removed unused selectAllLoaded helper to satisfy lint
 
   // Helper to clear selection is no longer exposed via UI, but retain inline usage after bulk apply.
   const clearSelectionInternal = () => setParams((p) => p.delete("selected"));
@@ -200,30 +185,21 @@ export function TransactionList({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2">
-            <Select
+            <CategorySelect
+              categories={categories}
               value={bulkCatParam || undefined}
-              onValueChange={setBulkCat}
-            >
-              <SelectTrigger className="w-[220px]">
-                <SelectValue placeholder="Bulk set category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-            <button
+              onChange={setBulkCat}
+              filter="all"
+              placeholder="Bulk set category"
+              triggerClassName="w-[220px]"
+            />
+            <Button
               type="button"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 rounded-md px-3 text-sm"
+              size="sm"
               onClick={() => void applyBulkCategory()}
             >
               Apply
-            </button>
+            </Button>
           </div>
         </div>
       </div>

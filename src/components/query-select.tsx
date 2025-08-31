@@ -1,0 +1,66 @@
+"use client";
+
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+
+export interface QuerySelectOption {
+  value: string;
+  label: string;
+}
+
+interface QuerySelectProps {
+  param: string;
+  options: QuerySelectOption[];
+  value?: string;
+  placeholder?: string;
+  extraParams?: Record<string, string | undefined>;
+  triggerClassName?: string;
+  size?: "sm" | "default";
+}
+
+export function QuerySelect({
+  param,
+  options,
+  value,
+  placeholder,
+  extraParams,
+  triggerClassName,
+  size,
+}: QuerySelectProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const onChange = (v: string) => {
+    const params = new URLSearchParams(searchParams?.toString());
+    params.set(param, v);
+    if (extraParams) {
+      for (const [k, val] of Object.entries(extraParams)) {
+        if (val === undefined || val === null) continue;
+        params.set(k, String(val));
+      }
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className={triggerClassName} size={size}>
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((opt) => (
+          <SelectItem key={opt.value} value={opt.value}>
+            {opt.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}

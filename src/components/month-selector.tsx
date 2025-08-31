@@ -1,42 +1,32 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+import { QuerySelect } from "~/components/query-select";
 
 interface MonthSelectorProps {
   months: { value: string; label: string }[];
   selectedMonth?: string;
+  includeAllOption?: boolean;
+  extraParams?: Record<string, string | undefined>;
 }
 
-export function MonthSelector({ months, selectedMonth }: MonthSelectorProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  const handleMonthChange = (value: string) => {
-    router.push(`${pathname}?month=${value}`);
-  };
-
+export function MonthSelector({
+  months,
+  selectedMonth,
+  includeAllOption = true,
+  extraParams,
+}: MonthSelectorProps) {
+  const options = [
+    ...(includeAllOption ? [{ value: "all", label: "All Months" }] : []),
+    ...months,
+  ];
   return (
-    <Select value={selectedMonth} onValueChange={handleMonthChange}>
-      <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="Select month" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem key="all" value="all">
-          All Months
-        </SelectItem>
-        {months.map((month) => (
-          <SelectItem key={month.value} value={month.value}>
-            {month.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <QuerySelect
+      param="month"
+      options={options}
+      value={selectedMonth}
+      placeholder="Select month"
+      extraParams={extraParams}
+      triggerClassName="w-[180px]"
+    />
   );
 }

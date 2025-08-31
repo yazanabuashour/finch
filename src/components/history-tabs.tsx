@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo, useTransition } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { useMemo } from "react";
+import { TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { ControlledTabs } from "~/components/controlled-tabs";
 import { TransactionList } from "~/components/transaction-list";
 import type { CategoryLite, TransactionWithCategory } from "~/app/history/page";
 
@@ -13,24 +12,6 @@ interface HistoryTabsProps {
 }
 
 export function HistoryTabs({ transactions, categories }: HistoryTabsProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [, startTransition] = useTransition();
-
-  const currentType = (searchParams.get("type") ?? "all") as
-    | "all"
-    | "expenses"
-    | "income";
-
-  const onTypeChange = (value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("type", value);
-    startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`);
-    });
-  };
-
   // Memoize to avoid recalculating for each tab
   const commonProps = useMemo(
     () => ({ transactions, categories }),
@@ -38,7 +19,7 @@ export function HistoryTabs({ transactions, categories }: HistoryTabsProps) {
   );
 
   return (
-    <Tabs value={currentType} onValueChange={onTypeChange} className="w-full">
+    <ControlledTabs initialValue="all" paramName="type">
       <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="all">All</TabsTrigger>
         <TabsTrigger value="expenses">Expenses</TabsTrigger>
@@ -53,6 +34,6 @@ export function HistoryTabs({ transactions, categories }: HistoryTabsProps) {
       <TabsContent value="income">
         <TransactionList filter="income" {...commonProps} />
       </TabsContent>
-    </Tabs>
+    </ControlledTabs>
   );
 }

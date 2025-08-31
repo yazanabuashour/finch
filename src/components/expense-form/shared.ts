@@ -32,9 +32,7 @@ export const validationSchema = z.object({
       return { message: "Invalid transaction type." };
     },
   }),
-  categoryId: z
-    .string()
-    .min(1, { message: "Please choose a category." }),
+  categoryId: z.string().min(1, { message: "Please choose a category." }),
 });
 
 export type ExpenseFormData = z.infer<typeof validationSchema>;

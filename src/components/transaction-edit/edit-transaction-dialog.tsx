@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "~/components/ui/button";
-import { Pencil } from "lucide-react";
+import { Loader2, Pencil } from "lucide-react";
 import { validationSchema } from "~/components/expense-form/shared";
 import type { TransactionWithCategory } from "~/app/history/page";
 import {
@@ -87,7 +87,12 @@ export function EditTransactionDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!form.formState.isSubmitting) setOpen(v);
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm" className="h-8 px-2">
           <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
@@ -103,7 +108,11 @@ export function EditTransactionDialog({
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6"
+              aria-busy={form.formState.isSubmitting}
+            >
               <TransactionFields
                 form={form as unknown as UseFormReturn<TransactionFormData>}
                 categories={categories}
@@ -113,10 +122,28 @@ export function EditTransactionDialog({
                   type="button"
                   variant="secondary"
                   onClick={() => setOpen(false)}
+                  disabled={form.formState.isSubmitting}
+                  aria-disabled={form.formState.isSubmitting}
                 >
                   Cancel
                 </Button>
-                <Button type="submit">Save Changes</Button>
+                <Button
+                  type="submit"
+                  disabled={form.formState.isSubmitting}
+                  aria-disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? (
+                    <>
+                      <Loader2
+                        className="size-4 animate-spin"
+                        aria-hidden="true"
+                      />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
               </div>
             </form>
           </Form>

@@ -9,6 +9,7 @@ import { validationSchema } from "./shared";
 import type z from "zod";
 import { Form } from "~/components/ui/form";
 import { Button } from "~/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { TransactionFields } from "~/components/transaction-form/transaction-fields";
 
 interface ExpenseFormProps {
@@ -67,8 +68,20 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <TransactionFields form={form} categories={categories} />
-        <Button type="submit" className="w-full">
-          Add Transaction
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={form.formState.isSubmitting}
+          aria-disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? (
+            <>
+              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              Adding...
+            </>
+          ) : (
+            "Add Transaction"
+          )}
         </Button>
       </form>
     </Form>

@@ -59,6 +59,7 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
             stroke="var(--chart-1)"
             fill="var(--chart-1)"
             fillOpacity={0.12}
+            isAnimationActive={false}
           />
           <Area
             type="monotone"
@@ -67,6 +68,7 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
             stroke="var(--destructive)"
             fill="var(--destructive)"
             fillOpacity={0.12}
+            isAnimationActive={false}
           />
           <Area
             type="monotone"
@@ -75,6 +77,7 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
             stroke="var(--chart-2)"
             fill="var(--chart-2)"
             fillOpacity={0.12}
+            isAnimationActive={false}
           />
         </AreaChart>
       </ResponsiveContainer>

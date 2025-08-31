@@ -55,8 +55,6 @@ This command will update your database to match the schema, which is useful for 
 
 ## 🐞 Bugs
 
-- [ ] Disable or add loading text for Add Transaction button when submitting
-- [ ] monthly trend animation on chart is broken
 - [ ] development environment slowness
 
 ## ✨ Features

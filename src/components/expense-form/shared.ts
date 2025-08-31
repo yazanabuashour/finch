@@ -33,7 +33,7 @@ export const validationSchema = z.object({
     },
   }),
   categoryId: z
-    .string({ required_error: "Please choose a category." })
+    .string()
     .min(1, { message: "Please choose a category." }),
 });
 

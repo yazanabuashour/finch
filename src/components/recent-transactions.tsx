@@ -5,7 +5,9 @@ import type { Transaction } from "~/server/db/schema";
 import { formatCurrency, formatDate } from "~/lib/utils";
 
 interface RecentTransactionsProps {
-  transactions: (Transaction & { category: { name: string } | null })[];
+  transactions: (Transaction & {
+    category: { name: string; type: "expense" | "income" } | null;
+  })[];
 }
 
 export function RecentTransactions({ transactions }: RecentTransactionsProps) {
@@ -20,10 +22,12 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
             <div className="flex min-w-0 flex-1 items-center gap-4">
               <div
                 className={`rounded-full p-2 ${
-                  transaction.type === "expense" ? "bg-red-100" : "bg-green-100"
+                  transaction.category?.type === "expense"
+                    ? "bg-red-100"
+                    : "bg-green-100"
                 }`}
               >
-                {transaction.type === "expense" ? (
+                {transaction.category?.type === "expense" ? (
                   <ArrowDownIcon className="h-4 w-4 text-red-500" />
                 ) : (
                   <ArrowUpIcon className="h-4 w-4 text-green-500" />
@@ -42,12 +46,12 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
               <Badge variant="outline">{transaction.category?.name}</Badge>
               <span
                 className={`font-medium tabular-nums ${
-                  transaction.type === "expense"
+                  transaction.category?.type === "expense"
                     ? "text-destructive"
                     : "text-primary"
                 }`}
               >
-                {transaction.type === "expense" ? "-" : "+"}
+                {transaction.category?.type === "expense" ? "-" : "+"}
                 {formatCurrency(Number(transaction.amount))}
               </span>
             </div>

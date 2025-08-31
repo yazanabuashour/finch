@@ -21,6 +21,7 @@ interface CategorySelectProps {
   filter?: "all" | "expense" | "income";
   placeholder?: string;
   triggerClassName?: string;
+  disabled?: boolean;
 }
 
 export function CategorySelect({
@@ -30,6 +31,7 @@ export function CategorySelect({
   filter = "all",
   placeholder = "Select a category",
   triggerClassName,
+  disabled,
 }: CategorySelectProps) {
   const items = categories
     .filter((c) => (filter === "all" ? true : c.type === filter))
@@ -37,7 +39,7 @@ export function CategorySelect({
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className={triggerClassName}>
+      <SelectTrigger className={triggerClassName} disabled={disabled}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

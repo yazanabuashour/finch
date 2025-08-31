@@ -175,8 +175,9 @@ export async function bulkUpdateTransactionCategoryAction(
 
     // Fetch selected transactions to ensure ownership and type compatibility
     const txs = await db
-      .select({ id: transactions.id, type: transactions.type })
+      .select({ id: transactions.id, type: categories.type })
       .from(transactions)
+      .innerJoin(categories, eq(transactions.categoryId, categories.id))
       .where(
         and(inArray(transactions.id, ids), eq(transactions.userId, user.id)),
       );
@@ -202,11 +203,7 @@ export async function bulkUpdateTransactionCategoryAction(
       .update(transactions)
       .set({ categoryId })
       .where(
-        and(
-          inArray(transactions.id, ids),
-          eq(transactions.userId, user.id),
-          eq(transactions.type, category.type),
-        ),
+        and(inArray(transactions.id, ids), eq(transactions.userId, user.id)),
       );
 
     revalidatePath("/history");

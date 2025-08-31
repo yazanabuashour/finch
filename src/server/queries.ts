@@ -92,12 +92,12 @@ export const getHistoryTransactions = async (
         description: transactions.description,
         amount: transactions.amount,
         transactionDate: transactions.transactionDate,
-        type: transactions.type,
+        type: categories.type,
         categoryId: transactions.categoryId,
         category: { name: categories.name },
       })
       .from(transactions)
-      .leftJoin(categories, eq(transactions.categoryId, categories.id))
+      .innerJoin(categories, eq(transactions.categoryId, categories.id))
       .where(eq(transactions.userId, userId))
       .orderBy(sql`${transactions.transactionDate} DESC`);
     return result;
@@ -110,12 +110,12 @@ export const getHistoryTransactions = async (
       description: transactions.description,
       amount: transactions.amount,
       transactionDate: transactions.transactionDate,
-      type: transactions.type,
+      type: categories.type,
       categoryId: transactions.categoryId,
       category: { name: categories.name },
     })
     .from(transactions)
-    .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .innerJoin(categories, eq(transactions.categoryId, categories.id))
     .where(
       and(
         eq(transactions.userId, userId),
@@ -179,11 +179,14 @@ export const getMonthSummary = async (
       gte(transactions.transactionDate, startDate),
       lte(transactions.transactionDate, endDate),
     ),
+    with: {
+      category: true,
+    },
   });
 
   const summary = monthTransactions.reduce(
     (acc, t) => {
-      if (t.type === "income") {
+      if (t.category?.type === "income") {
         acc.totalIncome += Number(t.amount);
       } else {
         acc.totalSpending += Number(t.amount);
@@ -213,15 +216,16 @@ export const getTotalCash = async (clerkUserId: string) => {
   const result = await db
     .select({
       totalIncome:
-        sql<number>`COALESCE(SUM(CASE WHEN ${transactions.type} = 'income' THEN ${transactions.amount} ELSE 0 END), 0)`.mapWith(
+        sql<number>`COALESCE(SUM(CASE WHEN ${categories.type} = 'income' THEN ${transactions.amount} ELSE 0 END), 0)`.mapWith(
           Number,
         ),
       totalExpenses:
-        sql<number>`COALESCE(SUM(CASE WHEN ${transactions.type} = 'expense' THEN ${transactions.amount} ELSE 0 END), 0)`.mapWith(
+        sql<number>`COALESCE(SUM(CASE WHEN ${categories.type} = 'expense' THEN ${transactions.amount} ELSE 0 END), 0)`.mapWith(
           Number,
         ),
     })
     .from(transactions)
+    .innerJoin(categories, eq(transactions.categoryId, categories.id))
     .where(eq(transactions.userId, user.id));
 
   const { totalIncome, totalExpenses } = result[0] ?? {
@@ -247,24 +251,25 @@ export const getCategoryBreakdown = async (
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0);
 
-  const monthTransactions = await db.query.transactions.findMany({
-    where: and(
-      eq(transactions.userId, user.id),
-      eq(transactions.type, "expense"),
-      gte(transactions.transactionDate, startDate),
-      lte(transactions.transactionDate, endDate),
-    ),
-    with: {
-      category: true,
-    },
-  });
+  const monthTransactions = await db
+    .select({ amount: transactions.amount, categoryName: categories.name })
+    .from(transactions)
+    .innerJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(
+      and(
+        eq(transactions.userId, user.id),
+        eq(categories.type, "expense"),
+        gte(transactions.transactionDate, startDate),
+        lte(transactions.transactionDate, endDate),
+      ),
+    );
 
   const totalSpending =
     monthTransactions.reduce((acc, t) => acc + Number(t.amount), 0) ?? 0;
 
   const categoryMap = monthTransactions.reduce(
     (acc, t) => {
-      const categoryName = t.category?.name ?? "Uncategorized";
+      const categoryName = t.categoryName ?? "Uncategorized";
       acc[categoryName] ??= { name: categoryName, amount: 0 };
       acc[categoryName].amount += Number(t.amount);
       return acc;
@@ -303,6 +308,9 @@ export const getMonthlyTrend = async (
       gte(transactions.transactionDate, startDate),
       lte(transactions.transactionDate, endDate),
     ),
+    with: {
+      category: true,
+    },
     orderBy: (transactions, { asc }) => [asc(transactions.transactionDate)],
   });
 
@@ -335,7 +343,7 @@ export const getMonthlyTrend = async (
     }
 
     const monthData = monthlyMap.get(monthKey)!;
-    if (t.type === "income") {
+    if (t.category?.type === "income") {
       monthData.income += Number(t.amount);
     } else {
       monthData.expenses += Number(t.amount);
@@ -380,6 +388,9 @@ export const getMonthlyTrendByMonths = async (
       gte(transactions.transactionDate, startDate),
       lte(transactions.transactionDate, endDate),
     ),
+    with: {
+      category: true,
+    },
     orderBy: (transactions, { asc }) => [asc(transactions.transactionDate)],
   });
 
@@ -411,7 +422,7 @@ export const getMonthlyTrendByMonths = async (
     const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
     const monthData = monthlyMap.get(key);
     if (!monthData) continue;
-    if (t.type === "income") {
+    if (t.category?.type === "income") {
       monthData.income += Number(t.amount);
     } else {
       monthData.expenses += Number(t.amount);

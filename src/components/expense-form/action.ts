@@ -35,7 +35,8 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
       return { success: false, message: "Could not find your account." };
     }
 
-    const { amount, categoryId, transactionDate, ...rest } = parseResult.data;
+    const { amount, categoryId, transactionDate, type, description } =
+      parseResult.data;
     const categoryIdAsInt = categoryId ? parseInt(categoryId, 10) : null;
 
     if (!categoryIdAsInt) {
@@ -58,7 +59,7 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
       return { success: false, message: "Selected category is not available." };
     }
 
-    if (rest.type !== category.type) {
+    if (type !== category.type) {
       return {
         success: false,
         message: "Selected category doesn’t match the chosen type.",
@@ -66,7 +67,7 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
     }
 
     await db.insert(transactions).values({
-      ...rest,
+      description,
       amount: amount,
       transactionDate: transactionDate,
       userId: user.id,

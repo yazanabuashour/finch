@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import type { UseFormReturn } from "react-hook-form";
+import { useWatch, type UseFormReturn } from "react-hook-form";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 
@@ -43,7 +43,8 @@ export function TransactionFields({
   form,
   categories,
 }: TransactionFieldsProps) {
-  const { type: transactionType } = form.watch();
+  // Use useWatch to ensure reactive updates on radio change
+  const transactionType = useWatch({ control: form.control, name: "type" });
 
   const incomeCategory = useMemo(
     () => categories.find((category) => category.type === "income"),
@@ -170,19 +171,29 @@ export function TransactionFields({
         render={({ field }) => (
           <FormItem>
             <FormLabel>Category</FormLabel>
-            <CategorySelect
-              categories={categories}
-              value={field.value}
-              onChange={(val) => {
-                field.onChange(val);
-                void form.trigger();
-              }}
-              filter={transactionType === "expense" ? "expense" : "income"}
-            />
-            {transactionType === "income" && (
-              <p className="text-muted-foreground text-sm">
-                Using your Income category. Categories are for expenses only.
-              </p>
+            {transactionType === "income" ? (
+              <div className="text-sm">
+                <div className="text-muted-foreground mb-1">
+                  Income category is auto-selected
+                </div>
+                <div className="bg-muted/30 rounded-md border px-3 py-2">
+                  {incomeCategory ? incomeCategory.name : "Income"}
+                </div>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  Categories are used for expenses. Income uses a single
+                  category.
+                </p>
+              </div>
+            ) : (
+              <CategorySelect
+                categories={categories}
+                value={field.value}
+                onChange={(val) => {
+                  field.onChange(val);
+                  void form.trigger();
+                }}
+                filter="expense"
+              />
             )}
             <FormMessage />
           </FormItem>

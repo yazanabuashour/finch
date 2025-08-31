@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useTransition } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useTransition,
+  useState,
+  useDeferredValue,
+} from "react";
 import { Search } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
 import { Input } from "~/components/ui/input";
@@ -38,17 +45,21 @@ export function TransactionList({
   const [, startTransition] = useTransition();
 
   const searchQuery = searchParams.get("q") ?? "";
+  const [query, setQuery] = useState(searchQuery);
+  const deferredQuery = useDeferredValue(query);
   const selectedParam = searchParams.get("selected") ?? "";
   const bulkCatParam = searchParams.get("bulkCat") ?? "";
+  const tabTypeParam = searchParams.get("type") ?? "all"; // ControlledTabs param
 
-  const selectedSet = useMemo(() => {
-    return new Set(
-      selectedParam
-        .split(",")
-        .map((s) => parseInt(s, 10))
-        .filter((n) => Number.isFinite(n) && n > 0),
-    );
-  }, [selectedParam]);
+  const [selectedSet, setSelectedSet] = useState<Set<number>>(
+    () =>
+      new Set(
+        selectedParam
+          .split(",")
+          .map((s) => parseInt(s, 10))
+          .filter((n) => Number.isFinite(n) && n > 0),
+      ),
+  );
 
   const setParams = (updater: (p: URLSearchParams) => void) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -58,23 +69,26 @@ export function TransactionList({
     });
   };
 
-  const filteredTransactions = transactions
-    .filter((transaction) => {
-      if (filter === "all") return true;
-      return transaction.type === filter;
-    })
-    .filter((transaction) => {
-      if (!searchQuery) return true;
-      const descriptionMatch =
-        transaction.description
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase()) ?? false;
-      const categoryMatch =
-        transaction.category?.name
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ?? false;
-      return descriptionMatch || categoryMatch;
-    });
+  // Precompute a lowercased search index once per transaction set
+  const searchIndex = useMemo(() => {
+    const idx = new Map<number, string>();
+    for (const t of transactions) {
+      const s = `${t.description ?? ""} ${t.category?.name ?? ""}`
+        .toLowerCase()
+        .trim();
+      idx.set(t.id, s);
+    }
+    return idx;
+  }, [transactions]);
+
+  const filteredTransactions = useMemo(() => {
+    const q = deferredQuery.trim().toLowerCase();
+    const byType = transactions.filter((t) =>
+      filter === "all" ? true : t.type === filter,
+    );
+    if (!q) return byType;
+    return byType.filter((t) => (searchIndex.get(t.id) ?? "").includes(q));
+  }, [transactions, filter, deferredQuery, searchIndex]);
 
   const visibleIds = useMemo(
     () => filteredTransactions.map((t) => t.id),
@@ -82,6 +96,7 @@ export function TransactionList({
   );
 
   const headerCheckboxRef = useRef<HTMLInputElement | null>(null);
+  const lastAnchorIndexRef = useRef<number | null>(null);
   const allVisibleSelected =
     visibleIds.length > 0 && visibleIds.every((id) => selectedSet.has(id));
   const someVisibleSelected = visibleIds.some((id) => selectedSet.has(id));
@@ -94,46 +109,112 @@ export function TransactionList({
   }, [someVisibleSelected, allVisibleSelected]);
 
   const toggleRow = (id: number) => {
-    const next = new Set(selectedSet);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setParams((p) => {
-      if (next.size === 0) p.delete("selected");
-      else p.set("selected", Array.from(next).join(","));
+    setSelectedSet((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
   };
 
+  const handleRowClick = (
+    e: React.MouseEvent,
+    id: number,
+    globalIndex: number,
+  ) => {
+    const target = e.target as HTMLElement | null;
+    if (target?.closest("input,button,select,a,textarea,[role=button]")) return;
+    const isMeta = e.metaKey || e.ctrlKey;
+    const isShift = e.shiftKey;
+
+    setSelectedSet((prev) => {
+      if (isShift) {
+        const anchor = lastAnchorIndexRef.current ?? globalIndex;
+        const start = Math.max(0, Math.min(anchor, globalIndex));
+        const end = Math.min(
+          filteredTransactions.length - 1,
+          Math.max(anchor, globalIndex),
+        );
+        const next = isMeta ? new Set(prev) : new Set<number>();
+        for (let i = start; i <= end; i++)
+          next.add(filteredTransactions[i]!.id);
+        return next;
+      }
+      if (isMeta) {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      }
+      return new Set([id]);
+    });
+    lastAnchorIndexRef.current = globalIndex;
+  };
+
   const selectVisible = () => {
-    const next = new Set(selectedSet);
-    visibleIds.forEach((id) => next.add(id));
-    setParams((p) => p.set("selected", Array.from(next).join(",")));
+    setSelectedSet((prev) => {
+      const next = new Set(prev);
+      visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
   };
 
   const deselectVisible = () => {
-    const next = new Set(selectedSet);
-    visibleIds.forEach((id) => next.delete(id));
-    setParams((p) => {
-      if (next.size === 0) p.delete("selected");
-      else p.set("selected", Array.from(next).join(","));
+    setSelectedSet((prev) => {
+      const next = new Set(prev);
+      visibleIds.forEach((id) => next.delete(id));
+      return next;
     });
   };
 
   // Removed unused selectAllLoaded helper to satisfy lint
 
   // Helper to clear selection is no longer exposed via UI, but retain inline usage after bulk apply.
-  const clearSelectionInternal = () => setParams((p) => p.delete("selected"));
+  const clearSelectionInternal = () => setSelectedSet(new Set());
 
-  const setSearch = (value: string) =>
-    setParams((p) => {
-      if (value) p.set("q", value);
-      else p.delete("q");
-    });
+  // Search is kept in local state; avoid updating URL on each keystroke
 
-  const setBulkCat = (value: string) =>
-    setParams((p) => {
-      if (value) p.set("bulkCat", value);
-      else p.delete("bulkCat");
-    });
+  const [bulkCat, setBulkCat] = useState(bulkCatParam);
+
+  // Determine effective bulk type based on current tab and selection
+  const selectedTypes = useMemo(() => {
+    const types = new Set<"expense" | "income">();
+    for (const t of transactions) {
+      if (selectedSet.has(t.id)) types.add(t.type);
+    }
+    return types;
+  }, [transactions, selectedSet]);
+
+  const bulkType: "expense" | "income" | null = useMemo(() => {
+    if (filter === "expense" || filter === "income") return filter;
+    if (selectedTypes.size === 1) return Array.from(selectedTypes)[0] ?? null;
+    return null; // mixed or none
+  }, [filter, selectedTypes]);
+
+  // Clear stale bulk category when context changes (type or selection cleared)
+  useEffect(() => {
+    if (!bulkType || selectedSet.size === 0) {
+      setBulkCat("");
+    }
+  }, [bulkType, selectedSet.size]);
+
+  // Clear selection when tab (type param) changes to avoid cross-type carryover
+  const prevTabTypeRef = useRef(tabTypeParam);
+  useEffect(() => {
+    if (prevTabTypeRef.current !== tabTypeParam) {
+      prevTabTypeRef.current = tabTypeParam;
+      setSelectedSet(new Set());
+      setBulkCat("");
+    }
+  }, [tabTypeParam]);
+
+  // Disable picker/apply if selection contains types that don't match effective bulkType
+  const selectedMismatch = useMemo(() => {
+    if (!bulkType) return false;
+    if (selectedTypes.size === 0) return false;
+    if (selectedTypes.size > 1) return true;
+    return !selectedTypes.has(bulkType);
+  }, [bulkType, selectedTypes]);
 
   const applyBulkCategory = async () => {
     const ids = Array.from(selectedSet);
@@ -141,7 +222,7 @@ export function TransactionList({
       toast.error("No rows selected.");
       return;
     }
-    const catId = parseInt(bulkCatParam, 10);
+    const catId = parseInt(bulkCat, 10);
     if (!Number.isFinite(catId)) {
       toast.error("Select a category to apply.");
       return;
@@ -171,6 +252,53 @@ export function TransactionList({
     }
   };
 
+  // Simple, no-deps row virtualization for large lists
+  const ROW_HEIGHT = 48; // px, matches h-12 on data rows
+  const OVERSCAN = 6;
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [containerHeight, setContainerHeight] = useState(0);
+  const shouldVirtualize = filteredTransactions.length > 200;
+
+  useEffect(() => {
+    if (!shouldVirtualize) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => setScrollTop(el.scrollTop));
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+
+    const ro = new ResizeObserver(() => {
+      setContainerHeight(el.clientHeight);
+    });
+    ro.observe(el);
+    setContainerHeight(el.clientHeight);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [shouldVirtualize]);
+
+  const total = filteredTransactions.length;
+  const startIndex = shouldVirtualize
+    ? Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN)
+    : 0;
+  const visibleCount = shouldVirtualize
+    ? Math.ceil(containerHeight / ROW_HEIGHT) + OVERSCAN * 2
+    : total;
+  const endIndex = shouldVirtualize
+    ? Math.min(total, startIndex + Math.max(visibleCount, 1))
+    : total;
+  const slice = filteredTransactions.slice(startIndex, endIndex);
+  const topPad = shouldVirtualize ? startIndex * ROW_HEIGHT : 0;
+  const bottomPad = shouldVirtualize
+    ? Math.max(0, (total - endIndex) * ROW_HEIGHT)
+    : 0;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -179,24 +307,48 @@ export function TransactionList({
           <Input
             placeholder="Search transactions..."
             className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearch(e.target.value)}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onBlur={(e) =>
+              setParams((p) => {
+                const v = e.target.value.trim();
+                if (v) p.set("q", v);
+                else p.delete("q");
+              })
+            }
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2">
             <CategorySelect
               categories={categories}
-              value={bulkCatParam || undefined}
+              value={bulkCat || undefined}
               onChange={setBulkCat}
-              filter="all"
-              placeholder="Bulk set category"
-              triggerClassName="w-[220px]"
+              filter={bulkType ?? "all"}
+              placeholder={
+                selectedSet.size === 0
+                  ? "Select rows to enable"
+                  : bulkType === null
+                    ? "Mixed selection — refine type"
+                    : "Bulk set category"
+              }
+              triggerClassName="w-[260px]"
+              disabled={
+                selectedSet.size === 0 || bulkType === null || selectedMismatch
+              }
             />
+            {selectedSet.size > 0 ? (
+              <span className="text-muted-foreground text-sm">
+                {selectedSet.size} selected
+              </span>
+            ) : null}
             <Button
               type="button"
               size="sm"
               onClick={() => void applyBulkCategory()}
+              disabled={
+                selectedSet.size === 0 || bulkType === null || selectedMismatch
+              }
             >
               Apply
             </Button>
@@ -205,82 +357,114 @@ export function TransactionList({
       </div>
 
       <div className="rounded-md border">
-        <Table className="min-w-[700px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[40px]">
-                <input
-                  ref={headerCheckboxRef}
-                  type="checkbox"
-                  aria-label="Select visible"
-                  className="h-4 w-4 rounded border"
-                  checked={allVisibleSelected}
-                  onChange={() =>
-                    allVisibleSelected ? deselectVisible() : selectVisible()
-                  }
-                />
-              </TableHead>
-              <TableHead className="w-[140px]">Date</TableHead>
-              <TableHead className="w-[50%]">Description</TableHead>
-              <TableHead className="w-[180px]">Category</TableHead>
-              <TableHead className="w-[140px] text-right">Amount</TableHead>
-              <TableHead className="w-[120px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredTransactions.length === 0 ? (
+        <div
+          ref={scrollRef}
+          className={
+            shouldVirtualize ? "max-h-[70vh] overflow-auto" : "overflow-visible"
+          }
+        >
+          <Table className="min-w-[700px]">
+            <TableHeader>
               <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="text-muted-foreground py-8 text-center"
-                >
-                  No transactions found
-                </TableCell>
+                <TableHead className="w-[40px]">
+                  <input
+                    ref={headerCheckboxRef}
+                    type="checkbox"
+                    aria-label="Select visible"
+                    className="h-4 w-4 rounded border"
+                    checked={allVisibleSelected}
+                    onChange={() =>
+                      allVisibleSelected ? deselectVisible() : selectVisible()
+                    }
+                  />
+                </TableHead>
+                <TableHead className="w-[140px]">Date</TableHead>
+                <TableHead className="w-[50%]">Description</TableHead>
+                <TableHead className="w-[180px]">Category</TableHead>
+                <TableHead className="w-[140px] text-right">Amount</TableHead>
+                <TableHead className="w-[120px]">Actions</TableHead>
               </TableRow>
-            ) : (
-              filteredTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      aria-label={`Select transaction ${transaction.id}`}
-                      className="h-4 w-4 rounded border"
-                      checked={selectedSet.has(transaction.id)}
-                      onChange={() => toggleRow(transaction.id)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {formatDate(transaction.transactionDate)}
-                  </TableCell>
-                  <TableCell className="max-w-[16rem] truncate sm:max-w-[28rem]">
-                    {transaction.description}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {transaction.category?.name ?? "Uncategorized"}
-                    </Badge>
-                  </TableCell>
+            </TableHeader>
+            <TableBody>
+              {filteredTransactions.length === 0 ? (
+                <TableRow>
                   <TableCell
-                    className={`text-right font-medium ${
-                      transaction.type === "expense"
-                        ? "text-destructive"
-                        : "text-primary"
-                    }`}
+                    colSpan={6}
+                    className="text-muted-foreground py-8 text-center"
                   >
-                    {transaction.type === "expense" ? "-" : "+"}
-                    {formatCurrency(Number(transaction.amount))}
-                  </TableCell>
-                  <TableCell>
-                    <EditTransactionDialog
-                      transaction={transaction}
-                      categories={categories}
-                    />
+                    No transactions found
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                <>
+                  {shouldVirtualize && topPad > 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        style={{ height: topPad, padding: 0 }}
+                      />
+                    </TableRow>
+                  ) : null}
+                  {slice.map((transaction, i) => (
+                    <TableRow
+                      key={transaction.id}
+                      className="h-12 cursor-pointer"
+                      onClick={(e) =>
+                        handleRowClick(e, transaction.id, startIndex + i)
+                      }
+                    >
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          aria-label={`Select transaction ${transaction.id}`}
+                          className="h-4 w-4 rounded border"
+                          checked={selectedSet.has(transaction.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={() => toggleRow(transaction.id)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {formatDate(transaction.transactionDate)}
+                      </TableCell>
+                      <TableCell className="max-w-[16rem] truncate sm:max-w-[28rem]">
+                        {transaction.description}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {transaction.category?.name ?? "Uncategorized"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell
+                        className={`text-right font-medium ${
+                          transaction.type === "expense"
+                            ? "text-destructive"
+                            : "text-primary"
+                        }`}
+                      >
+                        {transaction.type === "expense" ? "-" : "+"}
+                        {formatCurrency(Number(transaction.amount))}
+                      </TableCell>
+                      <TableCell>
+                        <EditTransactionDialog
+                          transaction={transaction}
+                          categories={categories}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {shouldVirtualize && bottomPad > 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        style={{ height: bottomPad, padding: 0 }}
+                      />
+                    </TableRow>
+                  ) : null}
+                </>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );

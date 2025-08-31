@@ -61,19 +61,13 @@ This command will update your database to match the schema, which is useful for 
 
 - [ ] yearly summaries
 - [ ] multi-month select in history page
-- [ ] improve search/filter performance in history when viewing all transactions
 - [ ] ability to add a new category
 
 ## 🗄️ Database
 
 - [ ] Auto backup db
-- [ ] Should description be notNull on transaction table?
-- [ ] DB constraint: enforce `transactions.type` matches `categories.type`
-  - Make `(categories.id, categories.type)` unique; reference from `transactions(category_id, type)` and drop the old FK on `category_id`.
-  - Add backfill + migration and keep `transactions.type` for query performance and historical stability.
 - [ ] backfill health-related transactions to use the health category
 - [ ] resetting development db from production should change the user id to match the development user id
-- [ ] move all db queries to queries.ts
 
 ## 🛠️ Platform / Infra / CI/CD
 

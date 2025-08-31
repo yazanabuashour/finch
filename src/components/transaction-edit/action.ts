@@ -18,14 +18,15 @@ export type UpdateTransactionInput = z.infer<typeof updateSchema>;
 export async function updateTransactionAction(data: UpdateTransactionInput) {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) {
-    return { success: false, message: "User not authenticated." };
+    return { success: false, message: "Please sign in to continue." };
   }
 
   const parseResult = updateSchema.safeParse(data);
   if (!parseResult.success) {
+    console.warn("Update validation failed", parseResult.error.flatten());
     return {
       success: false,
-      message: "Form validation failed.",
+      message: "Please correct the highlighted fields.",
       errors: parseResult.error.flatten().fieldErrors,
     } as const;
   }
@@ -37,7 +38,10 @@ export async function updateTransactionAction(data: UpdateTransactionInput) {
       .where(eq(users.clerkUserId, clerkUserId));
 
     if (!user) {
-      return { success: false, message: "User not found." } as const;
+      return {
+        success: false,
+        message: "Could not find your account.",
+      } as const;
     }
 
     const { id, amount, categoryId, transactionDate, ...rest } =
@@ -45,7 +49,7 @@ export async function updateTransactionAction(data: UpdateTransactionInput) {
     const categoryIdAsInt = categoryId ? parseInt(categoryId, 10) : null;
 
     if (!categoryIdAsInt) {
-      return { success: false, message: "Category ID is null." } as const;
+      return { success: false, message: "Please choose a category." } as const;
     }
 
     // Ensure the transaction belongs to the user
@@ -55,7 +59,10 @@ export async function updateTransactionAction(data: UpdateTransactionInput) {
       .where(eq(transactions.id, id));
 
     if (!existing || existing.userId !== user.id) {
-      return { success: false, message: "Transaction not found." } as const;
+      return {
+        success: false,
+        message: "Could not find that transaction.",
+      } as const;
     }
 
     // Validate category belongs to user and matches transaction type rules
@@ -73,14 +80,14 @@ export async function updateTransactionAction(data: UpdateTransactionInput) {
     if (!category) {
       return {
         success: false,
-        message: "Invalid category selection.",
+        message: "Selected category is not available.",
       } as const;
     }
 
     if (rest.type !== category.type) {
       return {
         success: false,
-        message: "Selected category does not match transaction type.",
+        message: "Selected category doesn’t match the chosen type.",
       } as const;
     }
 
@@ -103,12 +110,10 @@ export async function updateTransactionAction(data: UpdateTransactionInput) {
       message: "Transaction updated successfully!",
     } as const;
   } catch (error) {
-    console.error("Error during update:", error);
+    console.error("Error while updating transaction:", error);
     return {
       success: false,
-      message: `An error occurred while updating. ${
-        error instanceof Error ? error.message : ""
-      }`,
+      message: "Something went wrong while updating. Please try again.",
     } as const;
   }
 }
@@ -125,14 +130,15 @@ export async function bulkUpdateTransactionCategoryAction(
 ) {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) {
-    return { success: false, message: "User not authenticated." } as const;
+    return { success: false, message: "Please sign in to continue." } as const;
   }
 
   const parseResult = bulkUpdateSchema.safeParse(data);
   if (!parseResult.success) {
+    console.warn("Bulk update validation failed", parseResult.error.flatten());
     return {
       success: false,
-      message: "Validation failed.",
+      message: "Please check your selection and try again.",
       errors: parseResult.error.flatten().fieldErrors,
     } as const;
   }
@@ -144,7 +150,10 @@ export async function bulkUpdateTransactionCategoryAction(
       .where(eq(users.clerkUserId, clerkUserId));
 
     if (!user) {
-      return { success: false, message: "User not found." } as const;
+      return {
+        success: false,
+        message: "Could not find your account.",
+      } as const;
     }
 
     const { ids, categoryId } = parseResult.data;
@@ -160,7 +169,7 @@ export async function bulkUpdateTransactionCategoryAction(
     if (!category) {
       return {
         success: false,
-        message: "Invalid category selection.",
+        message: "Selected category is not available.",
       } as const;
     }
 
@@ -175,7 +184,7 @@ export async function bulkUpdateTransactionCategoryAction(
     if (txs.length !== ids.length) {
       return {
         success: false,
-        message: "One or more transactions were not found.",
+        message: "Some selected transactions could not be found.",
       } as const;
     }
 
@@ -185,7 +194,7 @@ export async function bulkUpdateTransactionCategoryAction(
       return {
         success: false,
         message:
-          "Selected category type does not match all selected transactions.",
+          "Selected category type doesn’t match all selected transactions.",
       } as const;
     }
 
@@ -208,12 +217,10 @@ export async function bulkUpdateTransactionCategoryAction(
       message: "Category updated for selected.",
     } as const;
   } catch (error) {
-    console.error("Error during bulk update:", error);
+    console.error("Error while bulk-updating transactions:", error);
     return {
       success: false,
-      message: `An error occurred while updating. ${
-        error instanceof Error ? error.message : ""
-      }`,
+      message: "Something went wrong while updating. Please try again.",
     } as const;
   }
 }

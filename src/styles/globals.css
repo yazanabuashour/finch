@@ -154,7 +154,7 @@
     transition: box-shadow 150ms ease;
   }
   .btn-primary-hover-ring:hover {
-    box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 35%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 35%, transparent);
   }
 
   /* Depth ring for Cards in dark mode */

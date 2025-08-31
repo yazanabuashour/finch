@@ -2,14 +2,18 @@ import z from "zod";
 
 export const validationSchema = z.object({
   description: z.string().max(255, {
-    message: "Description must not be more than 255 characters.",
+    message: "Keep description under 255 characters.",
   }),
   amount: z
     .string()
+    .transform((s) => s.trim())
+    .refine((val) => val.length > 0, {
+      message: "Enter an amount.",
+    })
     .refine(
       (val) => !isNaN(Number.parseFloat(val)) && Number.parseFloat(val) > 0,
       {
-        message: "Amount must be a positive number.",
+        message: "Enter an amount greater than 0.",
       },
     ),
   transactionDate: z.date({
@@ -28,7 +32,9 @@ export const validationSchema = z.object({
       return { message: "Invalid transaction type." };
     },
   }),
-  categoryId: z.string().min(1, { message: "Category is required." }),
+  categoryId: z
+    .string({ required_error: "Please choose a category." })
+    .min(1, { message: "Please choose a category." }),
 });
 
 export type ExpenseFormData = z.infer<typeof validationSchema>;

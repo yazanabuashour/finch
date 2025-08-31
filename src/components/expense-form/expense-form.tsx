@@ -25,6 +25,7 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
       amount: "",
       transactionDate: new Date(),
       type: "expense",
+      categoryId: "",
     },
   });
 
@@ -43,8 +44,22 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
           currentType === "income" ? form.getValues("categoryId") : "",
       });
     } else {
-      toast.error(result.message || "An error occurred.");
-      console.error("Form submission failed:", result.errors);
+      // Surface server-side field errors inline when available
+      if (result.errors && typeof result.errors === "object") {
+        for (const [key, messages] of Object.entries(result.errors)) {
+          const msg = Array.isArray(messages) ? messages[0] : undefined;
+          if (msg) {
+            form.setError(key as keyof FormData, {
+              type: "server",
+              message: msg,
+            });
+          }
+        }
+      }
+      toast.error(
+        result.message ||
+          "Could not add transaction. Please check the form and try again.",
+      );
     }
   };
 

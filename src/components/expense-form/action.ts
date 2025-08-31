@@ -16,9 +16,11 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
 
   const parseResult = validationSchema.safeParse(data);
   if (!parseResult.success) {
+    // Log details server-side; return a user-friendly message
+    console.warn("Expense form validation failed", parseResult.error.flatten());
     return {
       success: false,
-      message: "Form validation failed.",
+      message: "Please correct the highlighted fields.",
       errors: parseResult.error.flatten().fieldErrors,
     };
   }
@@ -30,14 +32,14 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
       .where(eq(users.clerkUserId, clerkUserId));
 
     if (!user) {
-      return { success: false, message: "User not found." };
+      return { success: false, message: "Could not find your account." };
     }
 
     const { amount, categoryId, transactionDate, ...rest } = parseResult.data;
     const categoryIdAsInt = categoryId ? parseInt(categoryId, 10) : null;
 
     if (!categoryIdAsInt) {
-      return { success: false, message: "Category ID is null." };
+      return { success: false, message: "Please choose a category." };
     }
 
     // Validate category belongs to user and matches transaction type rules
@@ -53,13 +55,13 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
       );
 
     if (!category) {
-      return { success: false, message: "Invalid category selection." };
+      return { success: false, message: "Selected category is not available." };
     }
 
     if (rest.type !== category.type) {
       return {
         success: false,
-        message: "Selected category does not match transaction type.",
+        message: "Selected category doesn’t match the chosen type.",
       };
     }
 
@@ -76,12 +78,10 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
 
     return { success: true, message: "Transaction added successfully!" };
   } catch (error) {
-    console.error("Error during saving:", error);
+    console.error("Error while saving transaction:", error);
     return {
       success: false,
-      message: `An error occurred while saving. ${
-        error instanceof Error ? error.message : ""
-      }`,
+      message: "Something went wrong while saving. Please try again.",
     };
   }
 }

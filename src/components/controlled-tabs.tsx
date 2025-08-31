@@ -24,8 +24,7 @@ export function ControlledTabs({
 
   useEffect(() => {
     setValue(urlVal ?? initialValue);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlVal]);
+  }, [urlVal, initialValue]);
 
   const onValueChange = (next: string) => {
     setValue(next);

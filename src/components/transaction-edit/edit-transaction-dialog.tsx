@@ -54,7 +54,7 @@ export function EditTransactionDialog({
     defaultValues: {
       id: transaction.id,
       description: transaction.description ?? "",
-      amount: transaction.amount,
+      amount: String(transaction.amount ?? ""),
       transactionDate: transaction.transactionDate,
       type: transaction.type,
       categoryId: transaction.categoryId.toString(),
@@ -68,8 +68,21 @@ export function EditTransactionDialog({
       router.refresh();
       setOpen(false);
     } else {
-      toast.error(result.message || "Failed to update transaction.");
-      console.error("Update failed:", result);
+      // Apply any server-returned field errors to the form
+      if (result.errors && typeof result.errors === "object") {
+        for (const [key, messages] of Object.entries(result.errors)) {
+          const msg = Array.isArray(messages) ? messages[0] : undefined;
+          if (msg) {
+            form.setError(key as keyof TransactionFormData, {
+              type: "server",
+              message: msg,
+            });
+          }
+        }
+      }
+      toast.error(
+        result.message || "Could not update transaction. Please try again.",
+      );
     }
   };
 

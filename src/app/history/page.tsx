@@ -26,6 +26,8 @@ export type TransactionWithCategory = {
   } | null;
 };
 
+export type CategoryLite = { id: number; name: string; type: "expense" | "income" };
+
 export default async function HistoryPage(props: {
   searchParams?: Promise<{
     month?: string;
@@ -71,7 +73,8 @@ export default async function HistoryPage(props: {
 
   const selectedMonth = searchParams?.month ?? availableMonths[0]?.value;
 
-  let transactionsData: TransactionWithCategory[] = [];
+  let transactionsData: (TransactionWithCategory & { categoryId: number })[] = [];
+  let userCategories: CategoryLite[] = [];
   if (selectedMonth) {
     const parsedDate = parse(selectedMonth, "yyyy-MM", new Date());
     const startDate = startOfMonth(parsedDate);
@@ -84,6 +87,7 @@ export default async function HistoryPage(props: {
         amount: transactions.amount,
         transactionDate: transactions.transactionDate,
         type: transactions.type,
+        categoryId: transactions.categoryId,
         category: { name: categories.name },
       })
       .from(transactions)
@@ -96,6 +100,11 @@ export default async function HistoryPage(props: {
         ),
       )
       .orderBy(sql`${transactions.transactionDate} DESC`);
+
+    userCategories = await db
+      .select({ id: categories.id, name: categories.name, type: categories.type })
+      .from(categories)
+      .where(eq(categories.userId, user.id));
   }
 
   const selectedMonthLabel =
@@ -125,18 +134,24 @@ export default async function HistoryPage(props: {
                 <TabsTrigger value="income">Income</TabsTrigger>
               </TabsList>
               <TabsContent value="all">
-                <TransactionList filter="all" transactions={transactionsData} />
+                <TransactionList
+                  filter="all"
+                  transactions={transactionsData}
+                  categories={userCategories}
+                />
               </TabsContent>
               <TabsContent value="expenses">
                 <TransactionList
                   filter="expense"
                   transactions={transactionsData}
+                  categories={userCategories}
                 />
               </TabsContent>
               <TabsContent value="income">
                 <TransactionList
                   filter="income"
                   transactions={transactionsData}
+                  categories={userCategories}
                 />
               </TabsContent>
             </Tabs>

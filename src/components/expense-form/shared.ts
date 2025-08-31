@@ -30,3 +30,5 @@ export const validationSchema = z.object({
   }),
   categoryId: z.string().min(1, { message: "Category is required." }),
 });
+
+export type ExpenseFormData = z.infer<typeof validationSchema>;

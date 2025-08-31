@@ -12,17 +12,20 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import type { TransactionWithCategory } from "~/app/history/page";
+import type { TransactionWithCategory, CategoryLite } from "~/app/history/page";
 import { formatCurrency, formatDate } from "~/lib/utils";
+import { EditTransactionDialog } from "~/components/transaction-edit/edit-transaction-dialog";
 
 interface TransactionListProps {
   filter: "all" | "expense" | "income";
-  transactions: TransactionWithCategory[];
+  transactions: (TransactionWithCategory & { categoryId: number })[];
+  categories: CategoryLite[];
 }
 
 export function TransactionList({
   filter,
   transactions,
+  categories,
 }: TransactionListProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -64,13 +67,14 @@ export function TransactionList({
               <TableHead className="w-[50%]">Description</TableHead>
               <TableHead className="w-[180px]">Category</TableHead>
               <TableHead className="text-right w-[140px]">Amount</TableHead>
+              <TableHead className="w-[120px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredTransactions.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={5}
                   className="text-muted-foreground py-8 text-center"
                 >
                   No transactions found
@@ -97,6 +101,12 @@ export function TransactionList({
                   >
                     {transaction.type === "expense" ? "-" : "+"}
                     {formatCurrency(Number(transaction.amount))}
+                  </TableCell>
+                  <TableCell>
+                    <EditTransactionDialog
+                      transaction={transaction}
+                      categories={categories}
+                    />
                   </TableCell>
                 </TableRow>
               ))

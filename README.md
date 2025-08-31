@@ -58,7 +58,7 @@ This command will update your database to match the schema, which is useful for 
 - [ ] Auto backup db
 - [ ] Ability to see trends/breakdown for any past month
 - [ ] Should description be notNull on transaction table?
-- [ ] Ability to edit past transactions
+- [x] Ability to edit past transactions
 - [ ] Make sure any state is managed by url params
 - [ ] Disable or add loading text for Add Transaction button when submitting
 - [x] Design overhaul
@@ -78,11 +78,4 @@ This command will update your database to match the schema, which is useful for 
 - [ ] add tests
 - [ ] use react compiler
 - [ ] backfill health-related transactions to use the health category
-
-## Design Overhaul
-
-- Sticky, blurred header for better navigation on mobile and desktop.
-- Consistent currency formatting across dashboard, lists, and summaries.
-- Truncated long descriptions in Recent Transactions and History to prevent UI overflow.
-- Improved small-screen spacing via container padding and responsive stacks.
-- Minor accessibility polish: labeled mobile menu trigger, larger touch targets.
+- [ ] system prompt or other ai instructions

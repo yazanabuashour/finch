@@ -64,7 +64,6 @@ This command will update your database to match the schema, which is useful for 
 - [ ] multi-month select in history page
 - [ ] improve search/filter performance in history when viewing all transactions
 - [ ] system prompt or other ai instructions
-- [ ] use react compiler
 
 ## 🗄️ Database
 

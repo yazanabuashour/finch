@@ -53,27 +53,36 @@ bun run db:push
 
 This command will update your database to match the schema, which is useful for development but should be used with caution in production.
 
-## Todo
+## 🐞 Bugs
+
+- [ ] Disable or add loading text for Add Transaction button when submitting
+- [ ] monthly trend animation on chart is broken
+- [ ] development environment slowness
+
+## ✨ Features
+
+- [ ] Ability to see trends/breakdown for any past month
+- [ ] yearly summaries
+- [ ] multi-month select in history page
+- [ ] improve search/filter performance in history when viewing all transactions
+- [ ] system prompt or other ai instructions
+- [ ] use react compiler
+
+## 🗄️ Database
 
 - [ ] Auto backup db
-- [ ] Ability to see trends/breakdown for any past month
 - [ ] Should description be notNull on transaction table?
-- [ ] Disable or add loading text for Add Transaction button when submitting
-- [ ] Fetch secrets and populate local .env file
-- [ ] Vercel development/staging environment
-- [ ] development environment slowness
 - [ ] DB constraint: enforce `transactions.type` matches `categories.type`
   - Make `(categories.id, categories.type)` unique; reference from `transactions(category_id, type)` and drop the old FK on `category_id`.
   - Add backfill + migration and keep `transactions.type` for query performance and historical stability.
-- [ ] add db:push as part of CI/CD
-- [ ] resetting development db from production should change the user id to match the development user id
-- [ ] add tests
-- [ ] use react compiler
 - [ ] backfill health-related transactions to use the health category
-- [ ] system prompt or other ai instructions
-- [ ] prettier in ci/cd
-- [ ] yearly summaries
-- [ ] improve search/filter performance in history when viewing all transactions
-- [ ] multi-month select in history page
+- [ ] resetting development db from production should change the user id to match the development user id
 - [ ] move all db queries to queries.ts
-- [ ] monthly trend animation on chart is broken
+
+## 🛠️ Platform / Infra / CI/CD
+
+- [ ] Fetch secrets and populate local .env file
+- [ ] Vercel development/staging environment
+- [ ] add db:push as part of CI/CD
+- [ ] prettier in ci/cd
+- [ ] add tests

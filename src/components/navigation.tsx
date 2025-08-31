@@ -40,11 +40,11 @@ export function Navigation() {
   ];
 
   return (
-    <div className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 border-b backdrop-blur">
       <div className="container mx-auto flex h-16 items-center px-4">
         <div className="mr-6 flex items-center space-x-2">
           <Link href="/" className="flex items-center gap-2">
-            <span className="bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-xl font-bold tracking-tight text-transparent">
+            <span className="from-primary to-chart-2 bg-gradient-to-r bg-clip-text text-xl font-bold tracking-tight text-transparent">
               Finch
             </span>
           </Link>

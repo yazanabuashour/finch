@@ -79,3 +79,7 @@ This command will update your database to match the schema, which is useful for 
 - [ ] use react compiler
 - [ ] backfill health-related transactions to use the health category
 - [ ] system prompt or other ai instructions
+- [ ] prettier in ci/cd
+- [ ] yearly summaries
+- [ ] improve search/filter performance in history when viewing all transactions
+- [ ] multi-month select in history page

@@ -66,7 +66,7 @@ export function TransactionList({
               <TableHead className="w-[140px]">Date</TableHead>
               <TableHead className="w-[50%]">Description</TableHead>
               <TableHead className="w-[180px]">Category</TableHead>
-              <TableHead className="text-right w-[140px]">Amount</TableHead>
+              <TableHead className="w-[140px] text-right">Amount</TableHead>
               <TableHead className="w-[120px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -96,7 +96,9 @@ export function TransactionList({
                   </TableCell>
                   <TableCell
                     className={`text-right font-medium ${
-                      transaction.type === "expense" ? "text-destructive" : "text-primary"
+                      transaction.type === "expense"
+                        ? "text-destructive"
+                        : "text-primary"
                     }`}
                   >
                     {transaction.type === "expense" ? "-" : "+"}

@@ -26,7 +26,11 @@ export type TransactionWithCategory = {
   } | null;
 };
 
-export type CategoryLite = { id: number; name: string; type: "expense" | "income" };
+export type CategoryLite = {
+  id: number;
+  name: string;
+  type: "expense" | "income";
+};
 
 export default async function HistoryPage(props: {
   searchParams?: Promise<{
@@ -72,49 +76,73 @@ export default async function HistoryPage(props: {
     );
 
   const selectedMonth = searchParams?.month ?? availableMonths[0]?.value;
+  const viewAllMonths = selectedMonth === "all";
 
-  let transactionsData: (TransactionWithCategory & { categoryId: number })[] = [];
+  let transactionsData: (TransactionWithCategory & { categoryId: number })[] =
+    [];
   let userCategories: CategoryLite[] = [];
   if (selectedMonth) {
-    const parsedDate = parse(selectedMonth, "yyyy-MM", new Date());
-    const startDate = startOfMonth(parsedDate);
-    const endDate = endOfMonth(parsedDate);
+    if (viewAllMonths) {
+      transactionsData = await db
+        .select({
+          id: transactions.id,
+          description: transactions.description,
+          amount: transactions.amount,
+          transactionDate: transactions.transactionDate,
+          type: transactions.type,
+          categoryId: transactions.categoryId,
+          category: { name: categories.name },
+        })
+        .from(transactions)
+        .leftJoin(categories, eq(transactions.categoryId, categories.id))
+        .where(eq(transactions.userId, user.id))
+        .orderBy(sql`${transactions.transactionDate} DESC`);
+    } else {
+      const parsedDate = parse(selectedMonth, "yyyy-MM", new Date());
 
-    transactionsData = await db
-      .select({
-        id: transactions.id,
-        description: transactions.description,
-        amount: transactions.amount,
-        transactionDate: transactions.transactionDate,
-        type: transactions.type,
-        categoryId: transactions.categoryId,
-        category: { name: categories.name },
-      })
-      .from(transactions)
-      .leftJoin(categories, eq(transactions.categoryId, categories.id))
-      .where(
-        and(
-          eq(transactions.userId, user.id),
-          gte(transactions.transactionDate, startDate),
-          lte(transactions.transactionDate, endDate),
-        ),
-      )
-      .orderBy(sql`${transactions.transactionDate} DESC`);
+      transactionsData = await db
+        .select({
+          id: transactions.id,
+          description: transactions.description,
+          amount: transactions.amount,
+          transactionDate: transactions.transactionDate,
+          type: transactions.type,
+          categoryId: transactions.categoryId,
+          category: { name: categories.name },
+        })
+        .from(transactions)
+        .leftJoin(categories, eq(transactions.categoryId, categories.id))
+        .where(
+          and(
+            eq(transactions.userId, user.id),
+            gte(transactions.transactionDate, startOfMonth(parsedDate)),
+            lte(transactions.transactionDate, endOfMonth(parsedDate)),
+          ),
+        )
+        .orderBy(sql`${transactions.transactionDate} DESC`);
+    }
 
     userCategories = await db
-      .select({ id: categories.id, name: categories.name, type: categories.type })
+      .select({
+        id: categories.id,
+        name: categories.name,
+        type: categories.type,
+      })
       .from(categories)
       .where(eq(categories.userId, user.id));
   }
 
-  const selectedMonthLabel =
-    availableMonths.find((m) => m.value === selectedMonth)?.label ??
-    "Transaction History";
+  const selectedMonthLabel = viewAllMonths
+    ? "All Transactions"
+    : (availableMonths.find((m) => m.value === selectedMonth)?.label ??
+      "Transaction History");
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold heading-gradient">Transaction History</h1>
+        <h1 className="heading-gradient text-2xl font-bold">
+          Transaction History
+        </h1>
         <MonthSelector months={availableMonths} selectedMonth={selectedMonth} />
       </div>
 
@@ -122,7 +150,9 @@ export default async function HistoryPage(props: {
         <CardHeader>
           <CardTitle>{selectedMonthLabel}</CardTitle>
           <CardDescription>
-            View your transactions for this month.
+            {viewAllMonths
+              ? "View your transactions across all months."
+              : "View your transactions for this month."}
           </CardDescription>
         </CardHeader>
         <CardContent>

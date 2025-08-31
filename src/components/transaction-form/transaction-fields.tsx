@@ -7,7 +7,13 @@ import { format } from "date-fns";
 
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/ui/form";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import {
   Popover,
@@ -28,14 +34,21 @@ import type { ExpenseFormData } from "~/components/expense-form/shared";
 
 export type FormData = ExpenseFormData;
 
-export type CategoryLite = { id: number; name: string; type: "expense" | "income" };
+export type CategoryLite = {
+  id: number;
+  name: string;
+  type: "expense" | "income";
+};
 
 interface TransactionFieldsProps {
   form: UseFormReturn<FormData>;
   categories: CategoryLite[];
 }
 
-export function TransactionFields({ form, categories }: TransactionFieldsProps) {
+export function TransactionFields({
+  form,
+  categories,
+}: TransactionFieldsProps) {
   const { type: transactionType } = form.watch();
 
   const incomeCategory = useMemo(
@@ -56,7 +69,10 @@ export function TransactionFields({ form, categories }: TransactionFieldsProps) 
       const currentCategory = form.getValues().categoryId;
       if (incomeCategory && currentCategory === incomeCategory.id.toString()) {
         const values = form.getValues();
-        form.reset({ ...values, categoryId: "" }, { keepDefaultValues: true, keepDirty: true, keepTouched: true });
+        form.reset(
+          { ...values, categoryId: "" },
+          { keepDefaultValues: true, keepDirty: true, keepTouched: true },
+        );
       }
     }
   }, [transactionType, form, incomeCategory]);
@@ -140,7 +156,12 @@ export function TransactionFields({ form, categories }: TransactionFieldsProps) 
                   </FormControl>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    initialFocus
+                  />
                 </PopoverContent>
               </Popover>
               <FormMessage />
@@ -176,7 +197,10 @@ export function TransactionFields({ form, categories }: TransactionFieldsProps) 
                   )
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map((category) => (
-                    <SelectItem key={category.id} value={category.id.toString()}>
+                    <SelectItem
+                      key={category.id}
+                      value={category.id.toString()}
+                    >
                       {category.name}
                     </SelectItem>
                   ))}

@@ -52,7 +52,9 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <TransactionFields form={form} categories={categories} />
-        <Button type="submit" className="w-full">Add Transaction</Button>
+        <Button type="submit" className="w-full">
+          Add Transaction
+        </Button>
       </form>
     </Form>
   );

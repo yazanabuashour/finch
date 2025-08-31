@@ -40,7 +40,8 @@ export async function updateTransactionAction(data: UpdateTransactionInput) {
       return { success: false, message: "User not found." } as const;
     }
 
-    const { id, amount, categoryId, transactionDate, ...rest } = parseResult.data;
+    const { id, amount, categoryId, transactionDate, ...rest } =
+      parseResult.data;
     const categoryIdAsInt = categoryId ? parseInt(categoryId, 10) : null;
 
     if (!categoryIdAsInt) {
@@ -59,12 +60,21 @@ export async function updateTransactionAction(data: UpdateTransactionInput) {
 
     // Validate category belongs to user and matches transaction type rules
     const [category] = await db
-      .select({ id: categories.id, name: categories.name, type: categories.type })
+      .select({
+        id: categories.id,
+        name: categories.name,
+        type: categories.type,
+      })
       .from(categories)
-      .where(and(eq(categories.id, categoryIdAsInt), eq(categories.userId, user.id)));
+      .where(
+        and(eq(categories.id, categoryIdAsInt), eq(categories.userId, user.id)),
+      );
 
     if (!category) {
-      return { success: false, message: "Invalid category selection." } as const;
+      return {
+        success: false,
+        message: "Invalid category selection.",
+      } as const;
     }
 
     if (rest.type !== category.type) {
@@ -88,7 +98,10 @@ export async function updateTransactionAction(data: UpdateTransactionInput) {
     revalidatePath("/history");
     revalidatePath("/dashboard");
 
-    return { success: true, message: "Transaction updated successfully!" } as const;
+    return {
+      success: true,
+      message: "Transaction updated successfully!",
+    } as const;
   } catch (error) {
     console.error("Error during update:", error);
     return {
@@ -99,4 +112,3 @@ export async function updateTransactionAction(data: UpdateTransactionInput) {
     } as const;
   }
 }
-

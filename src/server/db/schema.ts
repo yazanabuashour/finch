@@ -55,16 +55,15 @@ export const transactions = pgTable("transactions", {
   userId: integer("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  categoryId: integer("category_id").notNull().references(() => categories.id),
+  categoryId: integer("category_id")
+    .notNull()
+    .references(() => categories.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
-
-
 
 export const usersRelations = relations(users, ({ many }) => ({
   transactions: many(transactions),
   categories: many(categories),
-  
 }));
 
 export const categoriesRelations = relations(categories, ({ one, many }) => ({
@@ -86,8 +85,6 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   }),
 }));
 
-
-
 export type User = InferSelectModel<typeof users>;
 export type NewUser = InferInsertModel<typeof users>;
 
@@ -96,4 +93,3 @@ export type NewCategory = InferInsertModel<typeof categories>;
 
 export type Transaction = InferSelectModel<typeof transactions>;
 export type NewTransaction = InferInsertModel<typeof transactions>;
-

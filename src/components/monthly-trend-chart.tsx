@@ -23,7 +23,7 @@ interface MonthlyTrendChartProps {
 
 export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
   return (
-    <div className="h-[400px] w-full chart-glow rounded-lg">
+    <div className="chart-glow h-[400px] w-full rounded-lg">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}

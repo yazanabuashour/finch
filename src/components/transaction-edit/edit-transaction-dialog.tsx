@@ -21,10 +21,17 @@ import {
 } from "~/components/ui/dialog";
 import { updateTransactionAction } from "./action";
 import { Form } from "~/components/ui/form";
-import { TransactionFields, type FormData as TransactionFormData } from "~/components/transaction-form/transaction-fields";
+import {
+  TransactionFields,
+  type FormData as TransactionFormData,
+} from "~/components/transaction-form/transaction-fields";
 import type { UseFormReturn } from "react-hook-form";
 
-export type CategoryLite = { id: number; name: string; type: "expense" | "income" };
+export type CategoryLite = {
+  id: number;
+  name: string;
+  type: "expense" | "income";
+};
 
 const editSchema = validationSchema.extend({ id: z.number().int().positive() });
 
@@ -35,7 +42,10 @@ interface EditTransactionDialogProps {
   categories: CategoryLite[];
 }
 
-export function EditTransactionDialog({ transaction, categories }: EditTransactionDialogProps) {
+export function EditTransactionDialog({
+  transaction,
+  categories,
+}: EditTransactionDialogProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -70,7 +80,7 @@ export function EditTransactionDialog({ transaction, categories }: EditTransacti
           <Pencil className="mr-2 h-3.5 w-3.5" /> Edit
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-xl p-0">
+      <DialogContent className="p-0 sm:max-w-xl">
         <div className="p-5 sm:p-6">
           <DialogHeader className="mb-2">
             <DialogTitle>Edit Transaction</DialogTitle>
@@ -86,7 +96,11 @@ export function EditTransactionDialog({ transaction, categories }: EditTransacti
                 categories={categories}
               />
               <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setOpen(false)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit">Save Changes</Button>

@@ -42,9 +42,15 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
 
     // Validate category belongs to user and matches transaction type rules
     const [category] = await db
-      .select({ id: categories.id, name: categories.name, type: categories.type })
+      .select({
+        id: categories.id,
+        name: categories.name,
+        type: categories.type,
+      })
       .from(categories)
-      .where(and(eq(categories.id, categoryIdAsInt), eq(categories.userId, user.id)));
+      .where(
+        and(eq(categories.id, categoryIdAsInt), eq(categories.userId, user.id)),
+      );
 
     if (!category) {
       return { success: false, message: "Invalid category selection." };

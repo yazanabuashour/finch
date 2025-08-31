@@ -30,7 +30,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                 )}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium leading-none truncate max-w-[12rem] sm:max-w-[18rem] lg:max-w-[14rem]">
+                <p className="max-w-[12rem] truncate text-sm leading-none font-medium sm:max-w-[18rem] lg:max-w-[14rem]">
                   {transaction.description}
                 </p>
                 <p className="text-muted-foreground text-sm">
@@ -42,7 +42,9 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
               <Badge variant="outline">{transaction.category?.name}</Badge>
               <span
                 className={`font-medium tabular-nums ${
-                  transaction.type === "expense" ? "text-destructive" : "text-primary"
+                  transaction.type === "expense"
+                    ? "text-destructive"
+                    : "text-primary"
                 }`}
               >
                 {transaction.type === "expense" ? "-" : "+"}

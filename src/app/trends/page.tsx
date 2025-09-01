@@ -6,7 +6,6 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { CategoryBreakdown } from "~/components/category-breakdown";
 import { CategoriesFilters } from "~/components/categories-filters";
 import { MonthlyFilters } from "~/components/monthly-filters";
 import { ControlledTabs } from "~/components/controlled-tabs";
@@ -14,6 +13,7 @@ import { getAvailableMonths } from "~/server/queries";
 import { parseMonthParam, clamp } from "~/server/date-utils";
 import { auth } from "@clerk/nextjs/server";
 import { Suspense } from "react";
+import { Delayed } from "~/components/delayed";
 import CategoriesMonthlyContent from "~/components/trends/categories-monthly-content";
 import CategoriesYearlyContent from "~/components/trends/categories-yearly-content";
 import CategoryBreakdownMonthlyContent from "~/components/trends/category-breakdown-monthly-content";
@@ -115,7 +115,11 @@ export default async function TrendsPage({ searchParams }: PageProps) {
                     />
                     <Suspense
                       key={`cat-monthly-${monthlyYear}-${monthlyMonth}`}
-                      fallback={<CategoriesCardSkeleton />}
+                      fallback={
+                        <Delayed>
+                          <CategoriesCardSkeleton />
+                        </Delayed>
+                      }
                     >
                       <CategoriesMonthlyContent
                         userId={userId}
@@ -137,7 +141,11 @@ export default async function TrendsPage({ searchParams }: PageProps) {
                     />
                     <Suspense
                       key={`cat-yearly-${isYearValid ? yearFromParam! : monthlyYear}`}
-                      fallback={<CategoriesCardSkeleton />}
+                      fallback={
+                        <Delayed>
+                          <CategoriesCardSkeleton />
+                        </Delayed>
+                      }
                     >
                       <CategoriesYearlyContent
                         userId={userId}
@@ -159,7 +167,11 @@ export default async function TrendsPage({ searchParams }: PageProps) {
                 {categoriesView === "yearly" ? (
                   <Suspense
                     key={`breakdown-yearly-${isYearValid ? yearFromParam! : monthlyYear}`}
-                    fallback={<CategoryBreakdownSkeleton />}
+                    fallback={
+                      <Delayed>
+                        <CategoryBreakdownSkeleton />
+                      </Delayed>
+                    }
                   >
                     <CategoryBreakdownYearlyContent
                       userId={userId}
@@ -169,7 +181,11 @@ export default async function TrendsPage({ searchParams }: PageProps) {
                 ) : (
                   <Suspense
                     key={`breakdown-monthly-${monthlyYear}-${monthlyMonth}`}
-                    fallback={<CategoryBreakdownSkeleton />}
+                    fallback={
+                      <Delayed>
+                        <CategoryBreakdownSkeleton />
+                      </Delayed>
+                    }
                   >
                     <CategoryBreakdownMonthlyContent
                       userId={userId}
@@ -199,7 +215,11 @@ export default async function TrendsPage({ searchParams }: PageProps) {
             <CardContent>
               <Suspense
                 key={`monthly-trend-${monthsRange}`}
-                fallback={<MonthlyTrendSkeleton />}
+                fallback={
+                  <Delayed>
+                    <MonthlyTrendSkeleton />
+                  </Delayed>
+                }
               >
                 <MonthlyTrendContent
                   userId={userId}

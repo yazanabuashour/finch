@@ -66,7 +66,6 @@ This command will update your database to match the schema, which is useful for 
 ## 🗄️ Database
 
 - [ ] Auto backup db
-- [ ] backfill health-related transactions to use the health category
 - [ ] resetting development db from production should change the user id to match the development user id
 
 ## 🛠️ Platform / Infra / CI/CD

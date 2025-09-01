@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { Loader2 } from "lucide-react";
 
 export interface QuerySelectOption {
   value: string;
@@ -67,8 +68,15 @@ export function QuerySelect({
         size={size}
         disabled={isPending}
         aria-busy={isPending}
+        aria-live="polite"
       >
         <SelectValue placeholder={placeholder} />
+        {isPending && (
+          <Loader2
+            className="size-3.5 animate-spin opacity-70"
+            aria-hidden="true"
+          />
+        )}
       </SelectTrigger>
       <SelectContent>
         {options.map((opt) => (

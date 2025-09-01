@@ -15,6 +15,20 @@ import {
 import { HistoryTabs } from "~/components/history-tabs";
 import { MonthSelector } from "~/components/month-selector";
 import type { CategoryLite, HistoryTransaction } from "~/server/queries";
+import { Suspense } from "react";
+import { Skeleton } from "~/components/ui/skeleton";
+
+function HistoryContentSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-3">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Skeleton key={i} className="h-14" />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default async function HistoryPage(props: {
   searchParams?: Promise<{
@@ -67,16 +81,18 @@ export default async function HistoryPage(props: {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {transactionsData.length > 0 ? (
-            <HistoryTabs
-              transactions={transactionsData}
-              categories={userCategories}
-            />
-          ) : (
-            <div className="text-muted-foreground py-8 text-center">
-              No transactions found for this period.
-            </div>
-          )}
+          <Suspense key={selectedMonth} fallback={<HistoryContentSkeleton />}>
+            {transactionsData.length > 0 ? (
+              <HistoryTabs
+                transactions={transactionsData}
+                categories={userCategories}
+              />
+            ) : (
+              <div className="text-muted-foreground py-8 text-center">
+                No transactions found for this period.
+              </div>
+            )}
+          </Suspense>
         </CardContent>
       </Card>
     </div>

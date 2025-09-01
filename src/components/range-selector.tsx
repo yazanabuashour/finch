@@ -6,12 +6,14 @@ interface RangeSelectorProps {
   options: number[];
   selectedRange?: number;
   extraParams?: Record<string, string | undefined>;
+  showPendingSpinner?: boolean;
 }
 
 export function RangeSelector({
   options,
   selectedRange,
   extraParams,
+  showPendingSpinner,
 }: RangeSelectorProps) {
   const opts: QuerySelectOption[] = options.map((m) => ({
     value: String(m),
@@ -24,6 +26,7 @@ export function RangeSelector({
       value={selectedRange ? String(selectedRange) : undefined}
       extraParams={extraParams}
       size="sm"
+      showPendingSpinner={showPendingSpinner}
     />
   );
 }

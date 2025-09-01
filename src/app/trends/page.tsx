@@ -6,24 +6,22 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { CategoryChart } from "~/components/category-chart";
-import { MonthlyTrendChart } from "~/components/monthly-trend-chart";
 import { CategoryBreakdown } from "~/components/category-breakdown";
 import { CategoriesFilters } from "~/components/categories-filters";
 import { MonthlyFilters } from "~/components/monthly-filters";
 import { ControlledTabs } from "~/components/controlled-tabs";
-import {
-  getCategoryBreakdown,
-  getCategoryBreakdownByYear,
-  getMonthlyTrendByMonths,
-  getAvailableMonths,
-  getMonthSummary,
-  getYearSummary,
-} from "~/server/queries";
+import { getAvailableMonths } from "~/server/queries";
 import { parseMonthParam, clamp } from "~/server/date-utils";
 import { auth } from "@clerk/nextjs/server";
-import { formatCurrency } from "~/lib/utils";
-import { ArrowUpIcon, ArrowDownIcon, Wallet } from "lucide-react";
+import { Suspense } from "react";
+import CategoriesMonthlyContent from "~/components/trends/categories-monthly-content";
+import CategoriesYearlyContent from "~/components/trends/categories-yearly-content";
+import CategoryBreakdownMonthlyContent from "~/components/trends/category-breakdown-monthly-content";
+import CategoryBreakdownYearlyContent from "~/components/trends/category-breakdown-yearly-content";
+import MonthlyTrendContent from "~/components/trends/monthly-trend-content";
+import { CategoriesCardSkeleton } from "~/components/trends/categories-card-skeleton";
+import { CategoryBreakdownSkeleton } from "~/components/trends/category-breakdown-skeleton";
+import { MonthlyTrendSkeleton } from "~/components/trends/monthly-trend-skeleton";
 // months now fetched via getAvailableMonths
 
 interface PageProps {
@@ -68,28 +66,9 @@ export default async function TrendsPage({ searchParams }: PageProps) {
   const activeTab = sp.tab === "monthly" ? "monthly" : "categories";
   const categoriesView = sp.cview === "yearly" ? "yearly" : "monthly";
 
-  // Prepare datasets for both views
+  // Parse month for defaults and pass params to server components
   const monthlyYear = parsed?.year ?? now.getFullYear();
   const monthlyMonth = parsed?.month ?? now.getMonth() + 1;
-  const monthlyCategoryBreakdown = await getCategoryBreakdown(
-    userId,
-    monthlyYear,
-    monthlyMonth,
-  );
-  const yearlyCategoryBreakdown = await getCategoryBreakdownByYear(
-    userId,
-    isYearValid ? yearFromParam! : monthlyYear,
-  );
-  const yearlySummary = await getYearSummary(
-    userId,
-    isYearValid ? yearFromParam! : monthlyYear,
-  );
-  const monthlySummary = await getMonthSummary(
-    userId,
-    monthlyYear,
-    monthlyMonth,
-  );
-  const monthlyTrend = await getMonthlyTrendByMonths(userId, monthsRange);
 
   // Build available years from available months
   const yearsSet = new Set<string>();
@@ -134,49 +113,16 @@ export default async function TrendsPage({ searchParams }: PageProps) {
                       years={availableYears}
                       defaultYear={String(year)}
                     />
-                    <CategoryChart data={monthlyCategoryBreakdown} />
-                    <div className="mt-2 grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
-                      <div className="border-border/60 bg-muted/30 rounded-md border p-3">
-                        <div className="text-muted-foreground mb-1 flex items-center gap-2">
-                          <ArrowUpIcon className="h-4 w-4 text-emerald-400" />
-                          <span>Income</span>
-                        </div>
-                        <div className="font-semibold text-emerald-400">
-                          {formatCurrency(monthlySummary.totalIncome)}
-                        </div>
-                      </div>
-                      <div className="border-border/60 bg-muted/30 rounded-md border p-3">
-                        <div className="text-muted-foreground mb-1 flex items-center gap-2">
-                          <ArrowDownIcon className="h-4 w-4 text-red-400" />
-                          <span>Spending</span>
-                        </div>
-                        <div className="font-semibold text-red-400">
-                          {formatCurrency(monthlySummary.totalSpending)}
-                        </div>
-                      </div>
-                      <div className="border-border/60 bg-muted/30 rounded-md border p-3">
-                        <div className="text-muted-foreground mb-1 flex items-center gap-2">
-                          <Wallet
-                            className={
-                              monthlySummary.netSavings >= 0
-                                ? "h-4 w-4 text-emerald-400"
-                                : "h-4 w-4 text-red-400"
-                            }
-                          />
-                          <span>Net</span>
-                        </div>
-                        <div
-                          className={
-                            "font-semibold " +
-                            (monthlySummary.netSavings >= 0
-                              ? "text-emerald-400"
-                              : "text-red-400")
-                          }
-                        >
-                          {formatCurrency(monthlySummary.netSavings)}
-                        </div>
-                      </div>
-                    </div>
+                    <Suspense
+                      key={`cat-monthly-${monthlyYear}-${monthlyMonth}`}
+                      fallback={<CategoriesCardSkeleton />}
+                    >
+                      <CategoriesMonthlyContent
+                        userId={userId}
+                        year={monthlyYear}
+                        month={monthlyMonth}
+                      />
+                    </Suspense>
                   </TabsContent>
                   <TabsContent value="yearly" className="space-y-4 pt-4">
                     <CategoriesFilters
@@ -189,49 +135,15 @@ export default async function TrendsPage({ searchParams }: PageProps) {
                         isYearValid ? yearFromParam! : monthlyYear,
                       )}
                     />
-                    <CategoryChart data={yearlyCategoryBreakdown} />
-                    <div className="mt-2 grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
-                      <div className="border-border/60 bg-muted/30 rounded-md border p-3">
-                        <div className="text-muted-foreground mb-1 flex items-center gap-2">
-                          <ArrowUpIcon className="h-4 w-4 text-emerald-400" />
-                          <span>Income</span>
-                        </div>
-                        <div className="font-semibold text-emerald-400">
-                          {formatCurrency(yearlySummary.totalIncome)}
-                        </div>
-                      </div>
-                      <div className="border-border/60 bg-muted/30 rounded-md border p-3">
-                        <div className="text-muted-foreground mb-1 flex items-center gap-2">
-                          <ArrowDownIcon className="h-4 w-4 text-red-400" />
-                          <span>Spending</span>
-                        </div>
-                        <div className="font-semibold text-red-400">
-                          {formatCurrency(yearlySummary.totalSpending)}
-                        </div>
-                      </div>
-                      <div className="border-border/60 bg-muted/30 rounded-md border p-3">
-                        <div className="text-muted-foreground mb-1 flex items-center gap-2">
-                          <Wallet
-                            className={
-                              yearlySummary.netSavings >= 0
-                                ? "h-4 w-4 text-emerald-400"
-                                : "h-4 w-4 text-red-400"
-                            }
-                          />
-                          <span>Net</span>
-                        </div>
-                        <div
-                          className={
-                            "font-semibold " +
-                            (yearlySummary.netSavings >= 0
-                              ? "text-emerald-400"
-                              : "text-red-400")
-                          }
-                        >
-                          {formatCurrency(yearlySummary.netSavings)}
-                        </div>
-                      </div>
-                    </div>
+                    <Suspense
+                      key={`cat-yearly-${isYearValid ? yearFromParam! : monthlyYear}`}
+                      fallback={<CategoriesCardSkeleton />}
+                    >
+                      <CategoriesYearlyContent
+                        userId={userId}
+                        year={isYearValid ? yearFromParam! : monthlyYear}
+                      />
+                    </Suspense>
                   </TabsContent>
                 </ControlledTabs>
               </CardContent>
@@ -245,9 +157,26 @@ export default async function TrendsPage({ searchParams }: PageProps) {
               </CardHeader>
               <CardContent>
                 {categoriesView === "yearly" ? (
-                  <CategoryBreakdown data={yearlyCategoryBreakdown} />
+                  <Suspense
+                    key={`breakdown-yearly-${isYearValid ? yearFromParam! : monthlyYear}`}
+                    fallback={<CategoryBreakdownSkeleton />}
+                  >
+                    <CategoryBreakdownYearlyContent
+                      userId={userId}
+                      year={isYearValid ? yearFromParam! : monthlyYear}
+                    />
+                  </Suspense>
                 ) : (
-                  <CategoryBreakdown data={monthlyCategoryBreakdown} />
+                  <Suspense
+                    key={`breakdown-monthly-${monthlyYear}-${monthlyMonth}`}
+                    fallback={<CategoryBreakdownSkeleton />}
+                  >
+                    <CategoryBreakdownMonthlyContent
+                      userId={userId}
+                      year={monthlyYear}
+                      month={monthlyMonth}
+                    />
+                  </Suspense>
                 )}
               </CardContent>
             </Card>
@@ -268,7 +197,15 @@ export default async function TrendsPage({ searchParams }: PageProps) {
               </div>
             </CardHeader>
             <CardContent>
-              <MonthlyTrendChart data={monthlyTrend} />
+              <Suspense
+                key={`monthly-trend-${monthsRange}`}
+                fallback={<MonthlyTrendSkeleton />}
+              >
+                <MonthlyTrendContent
+                  userId={userId}
+                  monthsRange={monthsRange}
+                />
+              </Suspense>
             </CardContent>
           </Card>
         </TabsContent>

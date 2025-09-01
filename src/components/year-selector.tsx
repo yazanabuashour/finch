@@ -6,12 +6,14 @@ interface YearSelectorProps {
   years: { value: string; label: string }[];
   selectedYear?: string;
   extraParams?: Record<string, string | undefined>;
+  showPendingSpinner?: boolean;
 }
 
 export function YearSelector({
   years,
   selectedYear,
   extraParams,
+  showPendingSpinner,
 }: YearSelectorProps) {
   const options: QuerySelectOption[] = years.map((y) => ({
     value: y.value,
@@ -26,6 +28,7 @@ export function YearSelector({
       extraParams={extraParams}
       clearParams={["month"]}
       triggerClassName="w-[140px]"
+      showPendingSpinner={showPendingSpinner}
     />
   );
 }

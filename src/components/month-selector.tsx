@@ -8,6 +8,7 @@ interface MonthSelectorProps {
   includeAllOption?: boolean;
   extraParams?: Record<string, string | undefined>;
   clearParams?: string[];
+  showPendingSpinner?: boolean;
 }
 
 export function MonthSelector({
@@ -16,6 +17,7 @@ export function MonthSelector({
   includeAllOption = true,
   extraParams,
   clearParams,
+  showPendingSpinner,
 }: MonthSelectorProps) {
   const options = [
     ...(includeAllOption ? [{ value: "all", label: "All Months" }] : []),
@@ -30,6 +32,7 @@ export function MonthSelector({
       extraParams={extraParams}
       clearParams={clearParams}
       triggerClassName="w-[180px]"
+      showPendingSpinner={showPendingSpinner}
     />
   );
 }

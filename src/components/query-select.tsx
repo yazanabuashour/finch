@@ -25,6 +25,7 @@ interface QuerySelectProps {
   triggerClassName?: string;
   size?: "sm" | "default";
   clearParams?: string[];
+  showPendingSpinner?: boolean;
 }
 
 export function QuerySelect({
@@ -36,6 +37,7 @@ export function QuerySelect({
   triggerClassName,
   size,
   clearParams,
+  showPendingSpinner = true,
 }: QuerySelectProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -71,7 +73,7 @@ export function QuerySelect({
         aria-live="polite"
       >
         <SelectValue placeholder={placeholder} />
-        {isPending && (
+        {isPending && showPendingSpinner && (
           <Loader2
             className="size-3.5 animate-spin opacity-70"
             aria-hidden="true"

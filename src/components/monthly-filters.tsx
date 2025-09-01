@@ -20,6 +20,7 @@ export function MonthlyFilters({
           options={Array.from(RANGE_OPTIONS)}
           selectedRange={defaultRange}
           extraParams={{ tab: "monthly", month: currentMonth }}
+          showPendingSpinner={false}
         />
       </div>
     </div>

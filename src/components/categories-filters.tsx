@@ -35,6 +35,7 @@ export function CategoriesFilters({
               range: String(currentRange),
             }}
             clearParams={["year"]}
+            showPendingSpinner={false}
           />
         </div>
       )}
@@ -49,6 +50,7 @@ export function CategoriesFilters({
               cview: "yearly",
               range: String(currentRange),
             }}
+            showPendingSpinner={false}
           />
         </div>
       )}

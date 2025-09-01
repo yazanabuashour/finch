@@ -36,11 +36,13 @@ type EditFormData = z.infer<typeof editSchema>;
 interface EditTransactionDialogProps {
   transaction: HistoryTransaction & { categoryId: number | null };
   categories: CategoryLite[];
+  onSuccess?: () => void;
 }
 
 export function EditTransactionDialog({
   transaction,
   categories,
+  onSuccess,
 }: EditTransactionDialogProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -64,6 +66,12 @@ export function EditTransactionDialog({
     if (result.success) {
       toast.success(result.message);
       router.refresh();
+      // Allow parent to react (e.g., clear selections)
+      try {
+        onSuccess?.();
+      } catch {
+        // no-op
+      }
       setOpen(false);
     } else {
       // Apply any server-returned field errors to the form

@@ -46,6 +46,15 @@ export function CategoryChart({ data }: CategoryChartProps) {
     color: palette[index % palette.length],
   }));
 
+  const total = useMemo(
+    () =>
+      chartData.reduce(
+        (sum, d) => sum + (typeof d.value === "number" ? d.value : 0),
+        0,
+      ),
+    [chartData],
+  );
+
   return (
     <div className="chart-glow h-[350px] w-full rounded-lg">
       <ResponsiveContainer width="100%" height="100%">
@@ -58,10 +67,13 @@ export function CategoryChart({ data }: CategoryChartProps) {
             outerRadius={90}
             paddingAngle={2}
             dataKey="value"
+            nameKey="name"
             isAnimationActive={false}
-            label={({ name, percent }) => {
+            // Only show on-chart labels for meaningful slices to avoid overlap
+            label={({ percent }) => {
               if (percent === undefined) return "";
-              return `${name} ${(percent * 100).toFixed(0)}%`;
+              const pct = percent * 100;
+              return pct >= 5 ? `${Math.round(pct)}%` : "";
             }}
             labelLine={false}
           >
@@ -70,11 +82,17 @@ export function CategoryChart({ data }: CategoryChartProps) {
             ))}
           </Pie>
           <Tooltip
-            formatter={(value) => {
-              if (typeof value === "number") {
-                return [`${value.toFixed(2)}`, "Amount"];
-              }
-              return [value, "Amount"];
+            formatter={(value, _name, props) => {
+              const numeric = typeof value === "number" ? value : Number(value);
+              const pct =
+                total > 0 && Number.isFinite(numeric)
+                  ? Math.round((numeric / total) * 100)
+                  : 0;
+              const displayName = props?.name ?? "Category";
+              const displayValue = Number.isFinite(numeric)
+                ? numeric.toFixed(2)
+                : String(value);
+              return [displayValue, `${displayName} (${pct}%)`];
             }}
             contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0" }}
           />

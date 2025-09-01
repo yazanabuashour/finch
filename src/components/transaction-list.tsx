@@ -229,6 +229,7 @@ export function TransactionList({
       toast.success(result.message);
       // Clear selection and refresh
       clearSelectionInternal();
+      setBulkCat("");
       router.refresh();
     } else {
       toast.error(result.message || "Bulk update failed.");
@@ -301,25 +302,34 @@ export function TransactionList({
             }
           />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2">
-            <CategorySelect
-              categories={categories}
-              value={bulkCat || undefined}
-              onChange={setBulkCat}
-              filter={bulkType ?? "all"}
-              placeholder={
-                selectedSet.size === 0
-                  ? "Select rows to enable"
-                  : bulkType === null
-                    ? "Mixed selection — refine type"
-                    : "Bulk set category"
-              }
-              triggerClassName="w-[260px]"
-              disabled={
-                selectedSet.size === 0 || bulkType === null || selectedMismatch
-              }
-            />
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center md:w-auto md:flex-nowrap">
+          <CategorySelect
+            key={
+              bulkType === null || selectedMismatch
+                ? "bulk-mixed"
+                : "bulk-normal"
+            }
+            categories={categories}
+            value={
+              bulkType === null || selectedMismatch
+                ? undefined
+                : bulkCat || undefined
+            }
+            onChange={setBulkCat}
+            filter={bulkType ?? "all"}
+            placeholder={
+              selectedSet.size === 0
+                ? "Select rows to enable"
+                : bulkType === null
+                  ? "Mixed selection - refine type"
+                  : "Bulk set category"
+            }
+            triggerClassName="w-full md:w-[260px] max-w-full truncate"
+            disabled={
+              selectedSet.size === 0 || bulkType === null || selectedMismatch
+            }
+          />
+          <div className="flex flex-row flex-wrap items-center gap-2 md:ml-2 md:flex-nowrap">
             {selectedSet.size > 0 ? (
               <span className="text-muted-foreground text-sm">
                 {selectedSet.size} selected
@@ -330,6 +340,7 @@ export function TransactionList({
                 type="button"
                 size="sm"
                 variant="ghost"
+                className="shrink-0"
                 onClick={() => {
                   setSelectedSet(new Set());
                   setBulkCat("");
@@ -341,6 +352,7 @@ export function TransactionList({
             <Button
               type="button"
               size="sm"
+              className="shrink-0"
               onClick={() => void applyBulkCategory()}
               disabled={
                 selectedSet.size === 0 || bulkType === null || selectedMismatch
@@ -356,7 +368,7 @@ export function TransactionList({
         <div
           ref={scrollRef}
           className={
-            shouldVirtualize ? "max-h-[70vh] overflow-auto" : "overflow-visible"
+            shouldVirtualize ? "max-h-[70vh] overflow-auto" : "overflow-x-auto"
           }
         >
           <Table className="min-w-[700px]">
@@ -451,6 +463,10 @@ export function TransactionList({
                         <EditTransactionDialog
                           transaction={transaction}
                           categories={categories}
+                          onSuccess={() => {
+                            clearSelectionInternal();
+                            setBulkCat("");
+                          }}
                         />
                       </TableCell>
                     </TableRow>

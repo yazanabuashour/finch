@@ -360,21 +360,21 @@ export function TransactionList({
           }
         >
           <Table className="min-w-[700px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[40px]">
-                <input
-                  ref={headerCheckboxRef}
-                  type="checkbox"
-                  aria-label="Select all results (current filter)"
-                  title="Select all results (current filter)"
-                  className="h-4 w-4 rounded border"
-                  checked={allVisibleSelected}
-                  onChange={() =>
-                    allVisibleSelected ? deselectVisible() : selectVisible()
-                  }
-                />
-              </TableHead>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[40px]">
+                  <input
+                    ref={headerCheckboxRef}
+                    type="checkbox"
+                    aria-label="Select all results (current filter)"
+                    title="Select all results (current filter)"
+                    className="h-4 w-4 rounded border"
+                    checked={allVisibleSelected}
+                    onChange={() =>
+                      allVisibleSelected ? deselectVisible() : selectVisible()
+                    }
+                  />
+                </TableHead>
                 <TableHead className="w-[140px]">Date</TableHead>
                 <TableHead className="w-[50%]">Description</TableHead>
                 <TableHead className="w-[180px]">Category</TableHead>
@@ -406,12 +406,15 @@ export function TransactionList({
                     <TableRow
                       key={transaction.id}
                       className="h-12 cursor-pointer"
-                      data-state={selectedSet.has(transaction.id) ? "selected" : undefined}
-                      aria-selected={selectedSet.has(transaction.id) || undefined}
+                      data-state={
+                        selectedSet.has(transaction.id) ? "selected" : undefined
+                      }
+                      aria-selected={
+                        selectedSet.has(transaction.id) || undefined
+                      }
                       onClick={(e) =>
                         handleRowClick(e, transaction.id, startIndex + i)
                       }
-
                     >
                       <TableCell>
                         <input

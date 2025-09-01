@@ -1,5 +1,6 @@
 "use client";
 
+import { useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Select,
@@ -38,27 +39,35 @@ export function QuerySelect({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   const onChange = (v: string) => {
-    const params = new URLSearchParams(searchParams?.toString());
-    params.set(param, v);
-    if (clearParams?.length) {
-      for (const k of clearParams) {
-        params.delete(k);
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams?.toString());
+      params.set(param, v);
+      if (clearParams?.length) {
+        for (const k of clearParams) {
+          params.delete(k);
+        }
       }
-    }
-    if (extraParams) {
-      for (const [k, val] of Object.entries(extraParams)) {
-        if (val === undefined || val === null) continue;
-        params.set(k, String(val));
+      if (extraParams) {
+        for (const [k, val] of Object.entries(extraParams)) {
+          if (val === undefined || val === null) continue;
+          params.set(k, String(val));
+        }
       }
-    }
-    router.push(`${pathname}?${params.toString()}`);
+      router.push(`${pathname}?${params.toString()}`);
+    });
   };
 
   return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className={triggerClassName} size={size}>
+    <Select value={value} onValueChange={onChange} disabled={isPending}>
+      <SelectTrigger
+        className={triggerClassName}
+        size={size}
+        disabled={isPending}
+        aria-busy={isPending}
+      >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

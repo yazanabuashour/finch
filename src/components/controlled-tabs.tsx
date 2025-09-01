@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Tabs } from "~/components/ui/tabs";
 
@@ -18,6 +18,7 @@ export function ControlledTabs({
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const urlVal = searchParams.get(paramName);
   const [value, setValue] = useState<string>(urlVal ?? initialValue);
@@ -28,13 +29,20 @@ export function ControlledTabs({
 
   const onValueChange = (next: string) => {
     setValue(next);
-    const params = new URLSearchParams(searchParams.toString());
-    params.set(paramName, next);
-    router.replace(`${pathname}?${params.toString()}`);
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set(paramName, next);
+      router.replace(`${pathname}?${params.toString()}`);
+    });
   };
 
   return (
-    <Tabs value={value} onValueChange={onValueChange} className="w-full">
+    <Tabs
+      value={value}
+      onValueChange={onValueChange}
+      className="w-full"
+      aria-busy={isPending}
+    >
       {children}
     </Tabs>
   );

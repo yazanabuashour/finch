@@ -124,29 +124,12 @@ export function TransactionList({
   ) => {
     const target = e.target as HTMLElement | null;
     if (target?.closest("input,button,select,a,textarea,[role=button]")) return;
-    const isMeta = e.metaKey || e.ctrlKey;
-    const isShift = e.shiftKey;
-
+    // Toggle selection on row click: add if not selected, remove if selected
     setSelectedSet((prev) => {
-      if (isShift) {
-        const anchor = lastAnchorIndexRef.current ?? globalIndex;
-        const start = Math.max(0, Math.min(anchor, globalIndex));
-        const end = Math.min(
-          filteredTransactions.length - 1,
-          Math.max(anchor, globalIndex),
-        );
-        const next = isMeta ? new Set(prev) : new Set<number>();
-        for (let i = start; i <= end; i++)
-          next.add(filteredTransactions[i]!.id);
-        return next;
-      }
-      if (isMeta) {
-        const next = new Set(prev);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        return next;
-      }
-      return new Set([id]);
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
     lastAnchorIndexRef.current = globalIndex;
   };
@@ -342,6 +325,19 @@ export function TransactionList({
                 {selectedSet.size} selected
               </span>
             ) : null}
+            {selectedSet.size > 0 ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setSelectedSet(new Set());
+                  setBulkCat("");
+                }}
+              >
+                Clear
+              </Button>
+            ) : null}
             <Button
               type="button"
               size="sm"
@@ -364,20 +360,21 @@ export function TransactionList({
           }
         >
           <Table className="min-w-[700px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[40px]">
-                  <input
-                    ref={headerCheckboxRef}
-                    type="checkbox"
-                    aria-label="Select visible"
-                    className="h-4 w-4 rounded border"
-                    checked={allVisibleSelected}
-                    onChange={() =>
-                      allVisibleSelected ? deselectVisible() : selectVisible()
-                    }
-                  />
-                </TableHead>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[40px]">
+                <input
+                  ref={headerCheckboxRef}
+                  type="checkbox"
+                  aria-label="Select all results (current filter)"
+                  title="Select all results (current filter)"
+                  className="h-4 w-4 rounded border"
+                  checked={allVisibleSelected}
+                  onChange={() =>
+                    allVisibleSelected ? deselectVisible() : selectVisible()
+                  }
+                />
+              </TableHead>
                 <TableHead className="w-[140px]">Date</TableHead>
                 <TableHead className="w-[50%]">Description</TableHead>
                 <TableHead className="w-[180px]">Category</TableHead>
@@ -409,9 +406,12 @@ export function TransactionList({
                     <TableRow
                       key={transaction.id}
                       className="h-12 cursor-pointer"
+                      data-state={selectedSet.has(transaction.id) ? "selected" : undefined}
+                      aria-selected={selectedSet.has(transaction.id) || undefined}
                       onClick={(e) =>
                         handleRowClick(e, transaction.id, startIndex + i)
                       }
+
                     >
                       <TableCell>
                         <input

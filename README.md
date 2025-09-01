@@ -59,9 +59,9 @@ This command will update your database to match the schema, which is useful for 
 
 ## ✨ Features
 
-- [ ] yearly summaries
 - [ ] multi-month select in history page
 - [ ] ability to add a new category
+- [ ] add suspense/loading states where needed
 
 ## 🗄️ Database
 

@@ -7,6 +7,7 @@ interface MonthSelectorProps {
   selectedMonth?: string;
   includeAllOption?: boolean;
   extraParams?: Record<string, string | undefined>;
+  clearParams?: string[];
 }
 
 export function MonthSelector({
@@ -14,6 +15,7 @@ export function MonthSelector({
   selectedMonth,
   includeAllOption = true,
   extraParams,
+  clearParams,
 }: MonthSelectorProps) {
   const options = [
     ...(includeAllOption ? [{ value: "all", label: "All Months" }] : []),
@@ -26,6 +28,7 @@ export function MonthSelector({
       value={selectedMonth}
       placeholder="Select month"
       extraParams={extraParams}
+      clearParams={clearParams}
       triggerClassName="w-[180px]"
     />
   );

@@ -22,6 +22,7 @@ interface QuerySelectProps {
   extraParams?: Record<string, string | undefined>;
   triggerClassName?: string;
   size?: "sm" | "default";
+  clearParams?: string[];
 }
 
 export function QuerySelect({
@@ -32,6 +33,7 @@ export function QuerySelect({
   extraParams,
   triggerClassName,
   size,
+  clearParams,
 }: QuerySelectProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -40,6 +42,11 @@ export function QuerySelect({
   const onChange = (v: string) => {
     const params = new URLSearchParams(searchParams?.toString());
     params.set(param, v);
+    if (clearParams?.length) {
+      for (const k of clearParams) {
+        params.delete(k);
+      }
+    }
     if (extraParams) {
       for (const [k, val] of Object.entries(extraParams)) {
         if (val === undefined || val === null) continue;

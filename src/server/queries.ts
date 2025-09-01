@@ -283,6 +283,97 @@ export const getCategoryBreakdown = async (
   }));
 };
 
+export const getCategoryBreakdownByYear = async (
+  clerkUserId: string,
+  year: number,
+) => {
+  const user = await db.query.users.findFirst({
+    where: eq(users.clerkUserId, clerkUserId),
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const startDate = new Date(year, 0, 1);
+  const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+
+  const yearTransactions = await db
+    .select({ amount: transactions.amount, categoryName: categories.name })
+    .from(transactions)
+    .innerJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(
+      and(
+        eq(transactions.userId, user.id),
+        eq(categories.type, "expense"),
+        gte(transactions.transactionDate, startDate),
+        lte(transactions.transactionDate, endDate),
+      ),
+    );
+
+  const totalSpending =
+    yearTransactions.reduce((acc, t) => acc + Number(t.amount), 0) ?? 0;
+
+  const categoryMap = yearTransactions.reduce(
+    (acc, t) => {
+      const categoryName = t.categoryName ?? "Uncategorized";
+      acc[categoryName] ??= { name: categoryName, amount: 0 };
+      acc[categoryName].amount += Number(t.amount);
+      return acc;
+    },
+    {} as Record<string, { name: string; amount: number }>,
+  );
+
+  return Object.values(categoryMap).map((c) => ({
+    ...c,
+    total: totalSpending,
+  }));
+};
+
+export const getYearSummary = async (clerkUserId: string, year: number) => {
+  const user = await db.query.users.findFirst({
+    where: eq(users.clerkUserId, clerkUserId),
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const startDate = new Date(year, 0, 1);
+  const endDate = new Date(year, 11, 31, 23, 59, 59, 999);
+
+  const result = await db
+    .select({
+      totalIncome:
+        sql<number>`COALESCE(SUM(CASE WHEN ${categories.type} = 'income' THEN ${transactions.amount} ELSE 0 END), 0)`.mapWith(
+          Number,
+        ),
+      totalSpending:
+        sql<number>`COALESCE(SUM(CASE WHEN ${categories.type} = 'expense' THEN ${transactions.amount} ELSE 0 END), 0)`.mapWith(
+          Number,
+        ),
+    })
+    .from(transactions)
+    .innerJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(
+      and(
+        eq(transactions.userId, user.id),
+        gte(transactions.transactionDate, startDate),
+        lte(transactions.transactionDate, endDate),
+      ),
+    );
+
+  const { totalIncome, totalSpending } = result[0] ?? {
+    totalIncome: 0,
+    totalSpending: 0,
+  };
+  return {
+    totalIncome,
+    totalSpending,
+    netSavings: totalIncome - totalSpending,
+  };
+};
+
 export const getMonthlyTrend = async (
   clerkUserId: string,
   from?: Date,

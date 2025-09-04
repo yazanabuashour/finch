@@ -72,6 +72,15 @@ export function TransactionFields({
     }
   }, [transactionType, form, incomeCategory]);
 
+  const formatter = useMemo(
+    () =>
+      new Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    [],
+  );
+
   return (
     <>
       <FormField
@@ -117,7 +126,51 @@ export function TransactionFields({
                   <span className="text-muted-foreground absolute inset-y-0 left-0 flex items-center pl-3">
                     $
                   </span>
-                  <Input placeholder="0.00" className="pl-7" {...field} />
+                  <Input
+                    placeholder="0.00"
+                    className="pl-7"
+                    inputMode="decimal"
+                    pattern="[0-9]*[.]?[0-9]*"
+                    onFocus={(e) => {
+                      const val = e.target.value;
+                      if (val) {
+                        const ungrouped = val.replace(/,/g, "");
+                        if (ungrouped !== val) field.onChange(ungrouped);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      // Block comma from being entered
+                      if (e.key === "," || e.key === "-") {
+                        e.preventDefault();
+                      }
+                    }}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      // Sanitize input: remove commas and non numeric (keep one dot)
+                      let s = raw.replace(/,/g, "").replace(/-/g, "").replace(/[^0-9.]/g, "");
+                      // Ensure only a single decimal point
+                      const firstDot = s.indexOf(".");
+                      if (firstDot !== -1) {
+                        s =
+                          s.slice(0, firstDot + 1) +
+                          s.slice(firstDot + 1).replace(/\./g, "");
+                      }
+                      field.onChange(s);
+                    }}
+                    onBlur={(e) => {
+                      // Preserve RHF touched state
+                      field.onBlur();
+                      const raw = e.target.value.trim();
+                      if (raw === "") return;
+                      const normalized = raw.replace(/,/g, "");
+                      const num = Number.parseFloat(normalized);
+                      if (!Number.isFinite(num)) return;
+                      field.onChange(formatter.format(num));
+                    }}
+                    value={field.value}
+                    name={field.name}
+                    ref={field.ref}
+                  />
                 </div>
               </FormControl>
               <FormMessage />

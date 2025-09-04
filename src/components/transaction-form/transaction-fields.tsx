@@ -130,7 +130,6 @@ export function TransactionFields({
                     placeholder="0.00"
                     className="pl-7"
                     inputMode="decimal"
-                    pattern="[0-9]*[.]?[0-9]*"
                     onFocus={(e) => {
                       const val = e.target.value;
                       if (val) {

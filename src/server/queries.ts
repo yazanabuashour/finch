@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "./db";
 import { users, transactions } from "./db/schema";
-import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, lte, sql, isNull } from "drizzle-orm";
 import { enumerateMonthsUTC, monthKeyUTC } from "./date-utils";
 import { endOfMonth, startOfMonth, parse } from "date-fns";
 import { categories } from "./db/schema";
@@ -19,7 +19,7 @@ export const getAvailableMonths = async (
   const monthsResult: { month: string }[] = await db.execute(sql`
     SELECT DISTINCT TO_CHAR(${transactions.transactionDate}, 'YYYY-MM') as month
     FROM ${transactions}
-    WHERE ${transactions.userId} = ${user.id}
+    WHERE ${transactions.userId} = ${user.id} AND ${transactions.deletedAt} IS NULL
     ORDER BY month DESC
   `);
   return monthsResult
@@ -98,7 +98,9 @@ export const getHistoryTransactions = async (
       })
       .from(transactions)
       .innerJoin(categories, eq(transactions.categoryId, categories.id))
-      .where(eq(transactions.userId, userId))
+      .where(
+        and(eq(transactions.userId, userId), isNull(transactions.deletedAt)),
+      )
       .orderBy(sql`${transactions.transactionDate} DESC`);
     return result;
   }
@@ -121,6 +123,7 @@ export const getHistoryTransactions = async (
         eq(transactions.userId, userId),
         gte(transactions.transactionDate, startOfMonth(parsedDate)),
         lte(transactions.transactionDate, endOfMonth(parsedDate)),
+        isNull(transactions.deletedAt),
       ),
     )
     .orderBy(sql`${transactions.transactionDate} DESC`);
@@ -140,7 +143,10 @@ export const getTransactions = async (
     throw new Error("User not found");
   }
 
-  const whereConditions = [eq(transactions.userId, user.id)];
+  const whereConditions = [
+    eq(transactions.userId, user.id),
+    isNull(transactions.deletedAt),
+  ];
   if (from) {
     whereConditions.push(gte(transactions.transactionDate, from));
   }
@@ -178,6 +184,7 @@ export const getMonthSummary = async (
       eq(transactions.userId, user.id),
       gte(transactions.transactionDate, startDate),
       lte(transactions.transactionDate, endDate),
+      isNull(transactions.deletedAt),
     ),
     with: {
       category: true,
@@ -226,7 +233,9 @@ export const getTotalCash = async (clerkUserId: string) => {
     })
     .from(transactions)
     .innerJoin(categories, eq(transactions.categoryId, categories.id))
-    .where(eq(transactions.userId, user.id));
+    .where(
+      and(eq(transactions.userId, user.id), isNull(transactions.deletedAt)),
+    );
 
   const { totalIncome, totalExpenses } = result[0] ?? {
     totalIncome: 0,
@@ -261,6 +270,7 @@ export const getCategoryBreakdown = async (
         eq(categories.type, "expense"),
         gte(transactions.transactionDate, startDate),
         lte(transactions.transactionDate, endDate),
+        isNull(transactions.deletedAt),
       ),
     );
 
@@ -308,6 +318,7 @@ export const getCategoryBreakdownByYear = async (
         eq(categories.type, "expense"),
         gte(transactions.transactionDate, startDate),
         lte(transactions.transactionDate, endDate),
+        isNull(transactions.deletedAt),
       ),
     );
 
@@ -360,6 +371,7 @@ export const getYearSummary = async (clerkUserId: string, year: number) => {
         eq(transactions.userId, user.id),
         gte(transactions.transactionDate, startDate),
         lte(transactions.transactionDate, endDate),
+        isNull(transactions.deletedAt),
       ),
     );
 
@@ -398,6 +410,7 @@ export const getMonthlyTrend = async (
       eq(transactions.userId, user.id),
       gte(transactions.transactionDate, startDate),
       lte(transactions.transactionDate, endDate),
+      isNull(transactions.deletedAt),
     ),
     with: {
       category: true,
@@ -478,6 +491,7 @@ export const getMonthlyTrendByMonths = async (
       eq(transactions.userId, user.id),
       gte(transactions.transactionDate, startDate),
       lte(transactions.transactionDate, endDate),
+      isNull(transactions.deletedAt),
     ),
     with: {
       category: true,

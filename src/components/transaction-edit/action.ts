@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import z from "zod";
 
 import { db } from "~/server/db";
@@ -56,7 +56,7 @@ export async function updateTransactionAction(data: UpdateTransactionInput) {
     const [existing] = await db
       .select({ id: transactions.id, userId: transactions.userId })
       .from(transactions)
-      .where(eq(transactions.id, id));
+      .where(and(eq(transactions.id, id), isNull(transactions.deletedAt)));
 
     if (!existing || existing.userId !== user.id) {
       return {
@@ -99,7 +99,13 @@ export async function updateTransactionAction(data: UpdateTransactionInput) {
         transactionDate: transactionDate,
         categoryId: categoryIdAsInt,
       })
-      .where(and(eq(transactions.id, id), eq(transactions.userId, user.id)));
+      .where(
+        and(
+          eq(transactions.id, id),
+          eq(transactions.userId, user.id),
+          isNull(transactions.deletedAt),
+        ),
+      );
 
     revalidatePath("/");
     revalidatePath("/history");
@@ -179,7 +185,11 @@ export async function bulkUpdateTransactionCategoryAction(
       .from(transactions)
       .innerJoin(categories, eq(transactions.categoryId, categories.id))
       .where(
-        and(inArray(transactions.id, ids), eq(transactions.userId, user.id)),
+        and(
+          inArray(transactions.id, ids),
+          eq(transactions.userId, user.id),
+          isNull(transactions.deletedAt),
+        ),
       );
 
     if (txs.length !== ids.length) {
@@ -203,7 +213,11 @@ export async function bulkUpdateTransactionCategoryAction(
       .update(transactions)
       .set({ categoryId })
       .where(
-        and(inArray(transactions.id, ids), eq(transactions.userId, user.id)),
+        and(
+          inArray(transactions.id, ids),
+          eq(transactions.userId, user.id),
+          isNull(transactions.deletedAt),
+        ),
       );
 
     revalidatePath("/history");
@@ -218,6 +232,68 @@ export async function bulkUpdateTransactionCategoryAction(
     return {
       success: false,
       message: "Something went wrong while updating. Please try again.",
+    } as const;
+  }
+}
+
+// Soft delete a single transaction by id
+const deleteSchema = z.object({ id: z.number().int().positive() });
+export type DeleteTransactionInput = z.infer<typeof deleteSchema>;
+
+export async function deleteTransactionAction(data: DeleteTransactionInput) {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) {
+    return { success: false, message: "Please sign in to continue." } as const;
+  }
+
+  const parsed = deleteSchema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, message: "Invalid request." } as const;
+  }
+
+  try {
+    const [user] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.clerkUserId, clerkUserId));
+
+    if (!user) {
+      return {
+        success: false,
+        message: "Could not find your account.",
+      } as const;
+    }
+
+    const { id } = parsed.data;
+
+    // Ensure the transaction belongs to the user
+    const [existing] = await db
+      .select({ id: transactions.id, userId: transactions.userId })
+      .from(transactions)
+      .where(eq(transactions.id, id));
+
+    if (!existing || existing.userId !== user.id) {
+      return {
+        success: false,
+        message: "Could not find that transaction.",
+      } as const;
+    }
+
+    await db
+      .update(transactions)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(transactions.id, id), eq(transactions.userId, user.id)));
+
+    revalidatePath("/");
+    revalidatePath("/history");
+    revalidatePath("/dashboard");
+
+    return { success: true, message: "Transaction deleted." } as const;
+  } catch (error) {
+    console.error("Error while deleting transaction:", error);
+    return {
+      success: false,
+      message: "Something went wrong while deleting. Please try again.",
     } as const;
   }
 }

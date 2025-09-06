@@ -26,13 +26,16 @@ export const validationSchema = z.object({
     .refine((val) => val.length > 0, {
       message: "Enter an amount.",
     })
-    .refine((val) => {
-      const normalized = normalizeAmount(val);
-      const num = Number.parseFloat(normalized);
-      return !isNaN(num) && num > 0;
-    }, {
-      message: "Enter an amount greater than 0.",
-    })
+    .refine(
+      (val) => {
+        const normalized = normalizeAmount(val);
+        const num = Number.parseFloat(normalized);
+        return !isNaN(num) && num > 0;
+      },
+      {
+        message: "Enter an amount greater than 0.",
+      },
+    )
     .transform((val) => normalizeAmount(val)),
   transactionDate: z.date({
     error: (issue) => {

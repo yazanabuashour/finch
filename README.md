@@ -61,12 +61,12 @@ This command will update your database to match the schema, which is useful for 
 
 - [ ] multi-month select in history page
 - [ ] ability to add a new category
-- [ ] ability to delete transactions
 
 ## 🗄️ Database
 
 - [ ] Auto backup db
 - [ ] resetting development db from production should change the user id to match the development user id
+- [ ] indexing
 
 ## 🛠️ Platform / Infra / CI/CD
 

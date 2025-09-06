@@ -23,6 +23,7 @@ import {
 import type { HistoryTransaction, CategoryLite } from "~/server/queries";
 import { formatCurrency, formatDate } from "~/lib/utils";
 import { EditTransactionDialog } from "~/components/transaction-edit/edit-transaction-dialog";
+import { DeleteTransactionButton } from "~/components/transaction-edit/delete-transaction-button";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { CategorySelect } from "~/components/category-select";
@@ -460,14 +461,24 @@ export function TransactionList({
                         {formatCurrency(Number(transaction.amount))}
                       </TableCell>
                       <TableCell>
-                        <EditTransactionDialog
-                          transaction={transaction}
-                          categories={categories}
-                          onSuccess={() => {
-                            clearSelectionInternal();
-                            setBulkCat("");
-                          }}
-                        />
+                        <div className="flex items-center gap-1.5">
+                          <EditTransactionDialog
+                            transaction={transaction}
+                            categories={categories}
+                            onSuccess={() => {
+                              clearSelectionInternal();
+                              setBulkCat("");
+                            }}
+                          />
+                          <DeleteTransactionButton
+                            id={transaction.id}
+                            description={transaction.description}
+                            onSuccess={() => {
+                              clearSelectionInternal();
+                              setBulkCat("");
+                            }}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

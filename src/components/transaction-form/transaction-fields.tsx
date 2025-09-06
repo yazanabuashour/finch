@@ -146,7 +146,10 @@ export function TransactionFields({
                     onChange={(e) => {
                       const raw = e.target.value;
                       // Sanitize input: remove commas and non numeric (keep one dot)
-                      let s = raw.replace(/,/g, "").replace(/-/g, "").replace(/[^0-9.]/g, "");
+                      let s = raw
+                        .replace(/,/g, "")
+                        .replace(/-/g, "")
+                        .replace(/[^0-9.]/g, "");
                       // Ensure only a single decimal point
                       const firstDot = s.indexOf(".");
                       if (firstDot !== -1) {

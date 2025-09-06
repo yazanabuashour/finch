@@ -58,6 +58,7 @@ export const transactions = pgTable("transactions", {
     .notNull()
     .references(() => categories.id),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({

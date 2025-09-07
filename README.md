@@ -74,5 +74,7 @@ This command will update your database to match the schema, which is useful for 
 - [ ] Vercel development/staging environment
 - [ ] add db:push as part of CI/CD
 - [ ] prettier in ci/cd
-- [ ] add tests
+- [ ] add unit tests
+- [ ] add integration tests
 - [ ] system prompt or other ai instructions
+- [ ] build out ci/cd

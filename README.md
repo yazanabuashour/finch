@@ -76,5 +76,5 @@ This command will update your database to match the schema, which is useful for 
 - [ ] prettier in ci/cd
 - [ ] add unit tests
 - [ ] add integration tests
-- [ ] system prompt or other ai instructions
+- [ ] system prompt or other ai instructions (Agents.md)
 - [ ] build out ci/cd

@@ -61,6 +61,7 @@ This command will update your database to match the schema, which is useful for 
 
 - [ ] multi-month select in history page
 - [ ] ability to add a new category
+- [ ] input box autocomplete
 
 ## 🗄️ Database
 

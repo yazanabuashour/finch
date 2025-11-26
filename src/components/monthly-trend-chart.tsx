@@ -24,7 +24,7 @@ interface MonthlyTrendChartProps {
 export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
   return (
     <div className="chart-glow h-[400px] w-full rounded-lg">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
         <AreaChart
           data={data}
           margin={{

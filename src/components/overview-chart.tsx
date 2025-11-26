@@ -22,7 +22,7 @@ interface OverviewProps {
 export function Overview({ data }: OverviewProps) {
   return (
     <div className="chart-glow rounded-lg">
-      <ResponsiveContainer width="100%" height={350}>
+      <ResponsiveContainer width="100%" height={350} minWidth={1} minHeight={1}>
         <BarChart
           data={data}
           margin={{

@@ -23,7 +23,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { CategorySelect } from "~/components/category-select";
 import { Textarea } from "~/components/ui/textarea";
-import { cn } from "~/lib/utils";
+import { cn, type DescriptionSuggestion } from "~/lib/utils";
 import type { ExpenseFormData } from "~/components/expense-form/shared";
 
 export type FormData = ExpenseFormData;
@@ -37,14 +37,38 @@ export type CategoryLite = {
 interface TransactionFieldsProps {
   form: UseFormReturn<FormData>;
   categories: CategoryLite[];
+  descriptionSuggestions?: DescriptionSuggestion[];
 }
+
+const MAX_SUGGESTIONS = 6;
+
+const scoreFuzzyMatch = (query: string, candidate: string) => {
+  const needle = query.toLowerCase();
+  const haystack = candidate.toLowerCase();
+  if (!needle) return 0;
+
+  let score = 0;
+  let lastIndex = -1;
+
+  for (const char of needle) {
+    const idx = haystack.indexOf(char, lastIndex + 1);
+    if (idx === -1) return Number.POSITIVE_INFINITY;
+    score += idx - lastIndex - 1;
+    lastIndex = idx;
+  }
+
+  return score;
+};
 
 export function TransactionFields({
   form,
   categories,
+  descriptionSuggestions = [],
 }: TransactionFieldsProps) {
   // Use useWatch to ensure reactive updates on radio change
   const transactionType = useWatch({ control: form.control, name: "type" });
+  const descriptionValue =
+    useWatch({ control: form.control, name: "description" }) ?? "";
 
   const incomeCategory = useMemo(
     () => categories.find((category) => category.type === "income"),
@@ -80,6 +104,47 @@ export function TransactionFields({
       }),
     [],
   );
+
+  const activeType: "expense" | "income" =
+    transactionType === "income" ? "income" : "expense";
+
+  const filteredSuggestions = useMemo(() => {
+    if (!descriptionSuggestions.length) return [];
+    const pool = descriptionSuggestions.filter(
+      (suggestion) => suggestion.type === activeType,
+    );
+
+    if (!pool.length) return [];
+
+    const trimmedQuery = descriptionValue.trim();
+    if (!trimmedQuery) {
+      return pool.slice(0, MAX_SUGGESTIONS);
+    }
+
+    const scored = pool
+      .map((suggestion) => ({
+        suggestion,
+        score: scoreFuzzyMatch(trimmedQuery, suggestion.value),
+      }))
+      .filter((entry) => Number.isFinite(entry.score));
+
+    if (!scored.length) {
+      return pool.slice(0, MAX_SUGGESTIONS);
+    }
+
+    return scored
+      .sort((a, b) => {
+        if (a.score === b.score) {
+          return (
+            new Date(b.suggestion.lastUsed).getTime() -
+            new Date(a.suggestion.lastUsed).getTime()
+          );
+        }
+        return a.score - b.score;
+      })
+      .slice(0, MAX_SUGGESTIONS)
+      .map((entry) => entry.suggestion);
+  }, [descriptionSuggestions, activeType, descriptionValue]);
 
   return (
     <>
@@ -262,11 +327,37 @@ export function TransactionFields({
           <FormItem>
             <FormLabel>Description</FormLabel>
             <FormControl>
-              <Textarea
-                placeholder="Enter a description for this transaction"
-                className="resize-none"
-                {...field}
-              />
+              <div className="space-y-2">
+                <Textarea
+                  placeholder="Enter a description for this transaction"
+                  className="resize-none"
+                  autoComplete="off"
+                  {...field}
+                />
+                {filteredSuggestions.length > 0 ? (
+                  <div className="border-border bg-background rounded-md border shadow-sm">
+                    <div className="text-muted-foreground border-border border-b px-3 py-1.5 text-xs font-medium uppercase tracking-wide">
+                      Suggestions
+                    </div>
+                    <ul className="max-h-48 divide-y overflow-auto">
+                      {filteredSuggestions.map((suggestion) => (
+                        <li key={`${suggestion.type}-${suggestion.value}`}>
+                          <button
+                            type="button"
+                            className="hover:bg-muted focus-visible:ring-ring/60 w-full px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2"
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              field.onChange(suggestion.value);
+                            }}
+                          >
+                            {suggestion.value}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
             </FormControl>
             <FormMessage />
           </FormItem>

@@ -15,3 +15,9 @@ export const formatCurrency = (value: number) => {
     maximumFractionDigits: 2,
   })}`;
 };
+
+export type DescriptionSuggestion = {
+  value: string;
+  type: "expense" | "income";
+  lastUsed: string;
+};

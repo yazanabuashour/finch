@@ -1,10 +1,11 @@
 import "server-only";
 import { db } from "./db";
 import { users, transactions } from "./db/schema";
-import { and, eq, gte, lte, sql, isNull } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, lte, sql, isNull } from "drizzle-orm";
 import { enumerateMonthsUTC, monthKeyUTC } from "./date-utils";
 import { endOfMonth, startOfMonth, parse } from "date-fns";
 import { categories } from "./db/schema";
+import type { DescriptionSuggestion } from "~/lib/utils";
 
 // Shared: available months for a user (YYYY-MM with formatted labels)
 export const getAvailableMonths = async (
@@ -542,6 +543,47 @@ export const getMonthlyTrendByMonths = async (
       savings: data.income - data.expenses,
     };
   });
+};
+
+export const getDescriptionSuggestions = async (
+  clerkUserId: string,
+): Promise<DescriptionSuggestion[]> => {
+  const userId = await getUserIdByClerkId(clerkUserId);
+
+  const rows = await db
+    .select({
+      id: transactions.id,
+      description: transactions.description,
+      transactionDate: transactions.transactionDate,
+      type: categories.type,
+    })
+    .from(transactions)
+    .innerJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        isNull(transactions.deletedAt),
+        isNotNull(transactions.description),
+      ),
+    )
+    .orderBy(desc(transactions.transactionDate));
+
+  const seen = new Set<string>();
+  const suggestions: DescriptionSuggestion[] = [];
+
+  for (const row of rows) {
+    if (!row.description) continue;
+    const key = `${row.type}:${row.description.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    suggestions.push({
+      value: row.description,
+      type: row.type,
+      lastUsed: row.transactionDate.toISOString(),
+    });
+  }
+
+  return suggestions;
 };
 
 // Expenses page bootstrap: ensure a single Income category exists

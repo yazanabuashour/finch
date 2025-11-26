@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { CategoryLite } from "~/components/category-select";
+import type { DescriptionSuggestion } from "~/lib/utils";
 import { submitFormAction } from "./action";
 import { validationSchema } from "./shared";
 import type z from "zod";
@@ -14,11 +15,15 @@ import { TransactionFields } from "~/components/transaction-form/transaction-fie
 
 interface ExpenseFormProps {
   categories: CategoryLite[];
+  descriptionSuggestions: DescriptionSuggestion[];
 }
 
 type FormData = z.infer<typeof validationSchema>;
 
-export function ExpenseForm({ categories }: ExpenseFormProps) {
+export function ExpenseForm({
+  categories,
+  descriptionSuggestions,
+}: ExpenseFormProps) {
   const form = useForm<FormData>({
     resolver: zodResolver(validationSchema),
     defaultValues: {
@@ -67,7 +72,11 @@ export function ExpenseForm({ categories }: ExpenseFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <TransactionFields form={form} categories={categories} />
+        <TransactionFields
+          form={form}
+          categories={categories}
+          descriptionSuggestions={descriptionSuggestions}
+        />
         <Button
           type="submit"
           className="w-full"

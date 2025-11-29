@@ -22,6 +22,10 @@ describe("normalizeAmount", () => {
   test("removes negative signs and preserves precision", () => {
     expect(normalizeAmount("-45.6")).toBe("45.60");
   });
+
+  test("handles mixed locale currency formats", () => {
+    expect(normalizeAmount("€1.234,56")).toBe("1234.56");
+  });
 });
 
 describe("validationSchema failure cases", () => {
@@ -68,6 +72,46 @@ describe("validationSchema failure cases", () => {
       expect(result.error.flatten().fieldErrors.type).toContain(
         "Please select a transaction type.",
       );
+    }
+  });
+
+  test("requires a category selection", () => {
+    const result = validationSchema.safeParse({
+      ...validInput,
+      categoryId: "",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.categoryId).toContain(
+        "Please choose a category.",
+      );
+    }
+  });
+
+  test("flags invalid date inputs", () => {
+    const result = validationSchema.safeParse({
+      ...validInput,
+      transactionDate: new Date("invalid"),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.transactionDate).toContain(
+        "Invalid date.",
+      );
+    }
+  });
+});
+
+describe("validationSchema success cases", () => {
+  test("normalizes amount and returns parsed data", () => {
+    const result = validationSchema.safeParse({
+      ...validInput,
+      amount: " $1,234.5 ",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.amount).toBe("1234.50");
+      expect(result.data.description).toBe(validInput.description);
     }
   });
 });

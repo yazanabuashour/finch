@@ -8,8 +8,40 @@ import { users, transactions, categories } from "~/server/db/schema";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-export async function submitFormAction(data: z.infer<typeof validationSchema>) {
-  const { userId: clerkUserId } = await auth();
+type DbSelectBuilder = {
+  from: (...args: unknown[]) => {
+    where: (...args: unknown[]) => Promise<unknown[]>;
+  };
+};
+
+type DbInsertBuilder = {
+  values: (...args: unknown[]) => Promise<unknown>;
+};
+
+type DbLike = {
+  select: (...args: unknown[]) => DbSelectBuilder;
+  insert: (...args: unknown[]) => DbInsertBuilder;
+};
+
+type SubmitFormDeps = {
+  auth: typeof auth;
+  db: DbLike;
+  revalidatePath: typeof revalidatePath;
+};
+
+const defaultDeps: SubmitFormDeps = {
+  auth,
+  db,
+  revalidatePath,
+};
+
+export async function submitFormAction(
+  data: z.infer<typeof validationSchema>,
+  deps: SubmitFormDeps = defaultDeps,
+) {
+  const { auth: authFn, db: dbClient, revalidatePath: revalidate } = deps;
+
+  const { userId: clerkUserId } = await authFn();
   if (!clerkUserId) {
     return { success: false, message: "User not authenticated." };
   }
@@ -26,7 +58,7 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
   }
 
   try {
-    const [user] = await db
+    const [user] = await dbClient
       .select({ id: users.id })
       .from(users)
       .where(eq(users.clerkUserId, clerkUserId));
@@ -44,7 +76,7 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
     }
 
     // Validate category belongs to user and matches transaction type rules
-    const [category] = await db
+    const [category] = await dbClient
       .select({
         id: categories.id,
         name: categories.name,
@@ -66,7 +98,7 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
       };
     }
 
-    await db.insert(transactions).values({
+    await dbClient.insert(transactions).values({
       description,
       amount: amount,
       transactionDate: transactionDate,
@@ -74,8 +106,8 @@ export async function submitFormAction(data: z.infer<typeof validationSchema>) {
       categoryId: categoryIdAsInt,
     });
 
-    revalidatePath("/");
-    revalidatePath("/dashboard");
+    revalidate("/");
+    revalidate("/dashboard");
 
     return { success: true, message: "Transaction added successfully!" };
   } catch (error) {

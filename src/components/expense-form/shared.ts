@@ -1,6 +1,6 @@
 import z from "zod";
 
-function normalizeAmount(input: string) {
+export function normalizeAmount(input: string) {
   const raw = input.trim();
   let s = raw.replace(/[^0-9.,-]/g, "");
   // Disallow negative amounts; strip minus signs entirely

@@ -7,19 +7,10 @@ export function normalizeAmount(input: string) {
   s = s.replace(/-/g, "");
   const hasComma = s.includes(",");
   const hasDot = s.includes(".");
-  if (hasComma && hasDot) {
-    const commaIndex = s.lastIndexOf(",");
-    const dotIndex = s.lastIndexOf(".");
-    if (commaIndex > dotIndex) {
-      // Decimal comma, dots are thousands separators
-      s = s.replace(/\./g, "");
-      s = s.replace(/,/g, ".");
-    } else {
-      // Decimal dot, commas are thousands separators
-      s = s.replace(/,/g, "");
-    }
-  } else if (hasComma && !hasDot) {
+  if (hasComma && !hasDot) {
     s = s.replace(/,/g, ".");
+  } else if (hasComma && hasDot) {
+    s = s.replace(/,/g, "");
   }
   const n = Number.parseFloat(s);
   return Number.isFinite(n) ? n.toFixed(2) : s;

@@ -8,40 +8,8 @@ import { users, transactions, categories } from "~/server/db/schema";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-type DbSelectBuilder = {
-  from: (...args: unknown[]) => {
-    where: (...args: unknown[]) => Promise<unknown[]>;
-  };
-};
-
-type DbInsertBuilder = {
-  values: (...args: unknown[]) => Promise<unknown>;
-};
-
-type DbLike = {
-  select: (...args: unknown[]) => DbSelectBuilder;
-  insert: (...args: unknown[]) => DbInsertBuilder;
-};
-
-type SubmitFormDeps = {
-  auth: typeof auth;
-  db: DbLike;
-  revalidatePath: typeof revalidatePath;
-};
-
-const defaultDeps: SubmitFormDeps = {
-  auth,
-  db,
-  revalidatePath,
-};
-
-export async function submitFormAction(
-  data: z.infer<typeof validationSchema>,
-  deps: SubmitFormDeps = defaultDeps,
-) {
-  const { auth: authFn, db: dbClient, revalidatePath: revalidate } = deps;
-
-  const { userId: clerkUserId } = await authFn();
+export async function submitFormAction(data: z.infer<typeof validationSchema>) {
+  const { userId: clerkUserId } = await auth();
   if (!clerkUserId) {
     return { success: false, message: "User not authenticated." };
   }
@@ -58,7 +26,7 @@ export async function submitFormAction(
   }
 
   try {
-    const [user] = await dbClient
+    const [user] = await db
       .select({ id: users.id })
       .from(users)
       .where(eq(users.clerkUserId, clerkUserId));
@@ -76,7 +44,7 @@ export async function submitFormAction(
     }
 
     // Validate category belongs to user and matches transaction type rules
-    const [category] = await dbClient
+    const [category] = await db
       .select({
         id: categories.id,
         name: categories.name,
@@ -98,7 +66,7 @@ export async function submitFormAction(
       };
     }
 
-    await dbClient.insert(transactions).values({
+    await db.insert(transactions).values({
       description,
       amount: amount,
       transactionDate: transactionDate,
@@ -106,8 +74,8 @@ export async function submitFormAction(
       categoryId: categoryIdAsInt,
     });
 
-    revalidate("/");
-    revalidate("/dashboard");
+    revalidatePath("/");
+    revalidatePath("/dashboard");
 
     return { success: true, message: "Transaction added successfully!" };
   } catch (error) {

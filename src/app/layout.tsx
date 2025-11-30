@@ -7,6 +7,7 @@ import { ThemeProvider } from "~/components/theme-provider";
 import { Toaster } from "~/components/ui/sonner";
 import { Navigation } from "~/components/navigation";
 import { ClerkProvider } from "@clerk/nextjs";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
   title: "Finch - Expense Tracker",
@@ -26,6 +27,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning className={`${geist.variable}`}>
         <body className="antialiased">
+          <SpeedInsights />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

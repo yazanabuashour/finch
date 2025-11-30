@@ -53,15 +53,10 @@ bun run db:push
 
 This command will update your database to match the schema, which is useful for development but should be used with caution in production.
 
-## 🐞 Bugs
-
-- [ ] development environment slowness
-
 ## ✨ Features
 
 - [ ] multi-month select in history page
 - [ ] ability to add a new category
-- [ ] input box autocomplete
 
 ## 🗄️ Database
 
@@ -76,6 +71,5 @@ This command will update your database to match the schema, which is useful for 
 - [ ] add db:push as part of CI/CD
 - [ ] prettier in ci/cd
 - [ ] add unit tests
+- [ ] format, typecheck, lint in CI
 - [ ] add integration tests
-- [ ] system prompt or other ai instructions (Agents.md)
-- [ ] build out ci/cd
